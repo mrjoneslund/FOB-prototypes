@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beregning – Modulpakke</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rethink+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#101030;
+    --ink-2:#2d2c2b;
+    --surface:#fcf9f8;
+    --card:#ffffff;
+    --border:#e4e2ec;
+    --border-strong:#908d9b;
+    --muted:#6b6878;
+    --green:#1f9d6b;
+    --green-soft:#d9f2e7;
+    --teal-soft:#e3f1ef;
+    --blue:#1f2363;
+    --blue-soft:#e4e6f4;
+    --purple:#7a5bd4;
+    --purple-soft:#efeaff;
+    --danger:#ff6058;
+    --danger-soft:#ffe9e7;
+    --radius:14px;
+    --radius-sm:9px;
+    --shadow:0 1px 2px rgba(16,16,48,.04),0 8px 24px rgba(16,16,48,.06);
+    --shadow-pop:0 12px 40px rgba(16,16,48,.16);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--surface);color:var(--ink-2);-webkit-font-smoothing:antialiased}
+
+  /* ---- browser chrome + header (matcher prototyperne) ---- */
+  .chrome{background:#f0eef4;border-bottom:1px solid var(--border);padding:11px 16px;display:flex;align-items:center;gap:10px}
+  .dots{display:flex;gap:7px}
+  .dots span{width:12px;height:12px;border-radius:50%}
+  .dots span:nth-child(1){background:#ff5f57}.dots span:nth-child(2){background:#febc2e}.dots span:nth-child(3){background:#28c840}
+  .urlbar{flex:1;max-width:520px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .urlbar svg{width:12px;height:12px;opacity:.6}
+
+  .topnav{background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:14px 28px}
+  .back{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:#fff;display:grid;place-items:center;cursor:pointer}
+  .badge{background:var(--ink);color:#fff;font-size:12px;font-weight:600;padding:5px 12px;border-radius:7px}
+  .crumb{font-size:12.5px;color:var(--muted)}
+  .crumb b{display:block;font-family:'Rethink Sans',sans-serif;font-weight:700;font-size:18px;color:var(--ink);margin-top:2px}
+  .topnav .spacer{flex:1}
+  .icon-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+  .icon-btn:hover{background:#f6f5f9}
+  .zoom{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:6px 10px}
+  .btn-ghost{border:1px solid var(--border);background:#fff;border-radius:9px;padding:9px 18px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .btn-ghost:hover{background:#f6f5f9}
+  .btn-primary{background:var(--ink);color:#fff;border:none;border-radius:9px;padding:10px 22px;font-size:13.5px;font-weight:600;cursor:pointer}
+  .btn-primary:hover{background:#1c1c44}
+
+  .tabs{background:#fff;display:flex;border-bottom:1px solid var(--border)}
+  .tab{flex:1;text-align:center;padding:16px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+  .tab.active{color:#fff;background:var(--ink)}
+
+  /* ---- page ---- */
+  .page{max-width:920px;margin:0 auto;padding:48px 28px 120px}
+  h1{font-family:'Rethink Sans',sans-serif;font-weight:800;font-size:32px;color:var(--ink);letter-spacing:-.5px}
+  .lead{margin-top:12px;font-size:14px;line-height:1.6;color:var(--muted);max-width:680px}
+
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-top:30px}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)}
+  .panel-head h2{font-family:'Rethink Sans',sans-serif;font-weight:700;font-size:16px;color:var(--ink)}
+  .panel-head .tools{display:flex;gap:6px}
+  .btn-reset{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:#fff;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;font-family:inherit;color:var(--muted);cursor:pointer;transition:all .12s}
+  .btn-reset:hover{background:#f6f5f9;color:var(--ink);border-color:var(--border-strong)}
+  .btn-reset svg{color:inherit}
+  .panel-body{padding:24px}
+
+  .field-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+  .count-chip{background:var(--blue-soft);color:var(--blue);font-size:11px;font-weight:700;border-radius:20px;padding:2px 9px}
+
+  /* ---- expression input ---- */
+  .expr{min-height:56px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;cursor:text;transition:border-color .15s;background:#fff}
+  .expr:focus-within{border-color:var(--ink)}
+  .expr.error{border-color:var(--danger);background:var(--danger-soft)}
+  .token{display:inline-flex;align-items:center;gap:6px;border-radius:7px;padding:5px 10px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;animation:pop .14s ease}
+  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .token.comp{background:var(--blue-soft);color:var(--blue)}
+  .token.num{background:var(--green-soft);color:var(--green)}
+  .token.op{background:#f1f0f5;color:var(--ink)}
+  .token .x{cursor:pointer;opacity:.5;font-weight:700;line-height:1}
+  .token .x:hover{opacity:1}
+  .expr-input{border:none;outline:none;font-size:14px;font-family:inherit;min-width:60px;flex:1;background:transparent;color:var(--ink-2)}
+  .expr-input::placeholder{color:var(--border-strong)}
+  .expr .clear{margin-left:auto;color:var(--muted);background:none;border:none;cursor:pointer;display:grid;place-items:center;padding:4px;border-radius:6px}
+  .expr .clear:hover{background:#f1f0f5;color:var(--ink)}
+
+  .hint{font-size:12px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:6px}
+  .hint.err{color:var(--danger);font-weight:600}
+
+  /* ---- two columns ---- */
+  .cols{display:grid;grid-template-columns:1fr 280px;gap:28px;margin-top:28px}
+  @media(max-width:760px){.cols{grid-template-columns:1fr}}
+
+  /* component picker */
+  .search{position:relative;margin-bottom:10px}
+  .search input{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px 11px 38px;font-size:13.5px;font-family:inherit;outline:none}
+  .search input:focus{border-color:var(--ink)}
+  .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted)}
+  .picklist{border:1px solid var(--border);border-radius:var(--radius-sm);max-height:236px;overflow-y:auto}
+  .pickrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px;border-bottom:1px solid var(--border);font-size:13.5px;cursor:pointer;transition:background .12s}
+  .pickrow:last-child{border-bottom:none}
+  .pickrow:hover{background:#f6f5f9}
+  .pick-main{display:flex;align-items:center;gap:11px;min-width:0}
+  .pick-text{min-width:0}
+  .qtype{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;flex-shrink:0;background:#f1f0f5;color:var(--muted)}
+  .qtype svg{width:16px;height:16px}
+  .qtype.radio{background:var(--blue-soft);color:var(--blue)}
+  .qtype.checkbox{background:var(--purple-soft);color:var(--purple)}
+  .qtype.text{background:var(--teal-soft);color:#2c7a72}
+  .qtype.number{background:var(--green-soft);color:var(--green)}
+  .pickrow .add{width:24px;height:24px;border-radius:6px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:17px;font-weight:600;flex-shrink:0}
+  .pickrow.disabled{opacity:.45;cursor:not-allowed}
+  .pickrow.disabled .add{background:#f1f0f5;color:var(--muted)}
+  .noscore{font-size:11px;color:var(--muted);font-style:italic}
+  .empty-pick{padding:24px;text-align:center;font-size:13px;color:var(--muted)}
+
+  /* operators */
+  .ops{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .op{border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;height:50px;font-size:19px;font-weight:600;color:var(--ink);cursor:pointer;transition:all .12s;display:grid;place-items:center}
+  .op:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .op:active{transform:scale(.95)}
+
+  .divider{height:1px;background:var(--border);margin:28px 0}
+
+  /* beregnings-id */
+  .select-wrap{position:relative;max-width:440px}
+  .select-trigger{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 15px;font-size:14px;font-family:inherit;background:#fff;display:flex;align-items:center;justify-content:space-between;cursor:pointer;text-align:left}
+  .select-trigger:hover{border-color:var(--border-strong)}
+  .select-trigger.open{border-color:var(--ink)}
+  .select-trigger.placeholder{color:var(--border-strong)}
+  .select-trigger .val{color:var(--ink);font-weight:600}
+  .select-trigger .val small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+  .select-trigger svg{width:16px;height:16px;color:var(--muted);transition:transform .15s}
+  .select-trigger.open svg{transform:rotate(180deg)}
+  .id-desc{font-size:12px;color:var(--muted);margin-top:9px;max-width:440px;line-height:1.5}
+
+  .dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-pop);z-index:30;overflow:hidden;display:none}
+  .dropdown.open{display:block;animation:pop .12s ease}
+  .dropdown .search{margin:10px;margin-bottom:6px}
+  .dd-list{max-height:300px;overflow-y:auto;padding-bottom:6px}
+  .dd-group{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:10px 16px 5px;position:sticky;top:0;background:#fff}
+  .dd-row{padding:10px 16px;font-size:13.5px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .dd-row:hover{background:#f6f5f9}
+  .dd-row.sel{background:var(--teal-soft)}
+  .dd-row .code{font-weight:700;color:var(--ink)}
+  .dd-row .full{color:var(--muted);font-size:12px}
+  .dd-row .check{color:var(--green);opacity:0}
+  .dd-row.sel .check{opacity:1}
+  .dd-empty{padding:22px;text-align:center;font-size:13px;color:var(--muted)}
+
+  /* snackbar */
+  .snackbar{position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(140%);background:#fff;border:1px solid var(--border);border-left:4px solid var(--green);border-radius:12px;box-shadow:var(--shadow-pop);padding:15px 18px;display:flex;align-items:center;gap:13px;min-width:380px;max-width:520px;z-index:50;transition:transform .3s cubic-bezier(.2,.9,.3,1)}
+  .snackbar.show{transform:translateX(-50%) translateY(0)}
+  .snackbar.err{border-left-color:var(--danger)}
+  .snackbar .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+  .snackbar.ok .ic{background:var(--green-soft);color:var(--green)}
+  .snackbar.err .ic{background:var(--danger-soft);color:var(--danger)}
+  .snackbar .txt{font-size:13.5px;line-height:1.4}
+  .snackbar .txt b{display:block;color:var(--ink);font-weight:700;margin-bottom:1px}
+  .snackbar .txt span{color:var(--muted)}
+  .snackbar .close{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px}
+  .snackbar .close:hover{background:#f1f0f5}
+</style>
+</head>
+<body>
+
+<div class="chrome">
+  <div class="dots"><span></span><span></span><span></span></div>
+  <div class="urlbar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    www.terapiforløb.dk
+  </div>
+</div>
+
+<div class="topnav">
+  <div class="back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></div>
+  <div class="badge">Modul 4</div>
+  <div class="crumb">Modulpakke "Introduktion til angst"<b>↳ Hvad er angst?</b></div>
+  <div class="spacer"></div>
+  <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/></svg></div>
+  <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="14" rx="2"/></svg></div>
+  <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/></svg></div>
+  <div class="zoom">100% <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+  <button class="btn-ghost">Preview</button>
+  <button class="btn-primary" id="gemBtn">Gem</button>
+  <div class="icon-btn" style="border:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></div>
+</div>
+
+<div class="tabs">
+  <div class="tab">Rediger indhold</div>
+  <div class="tab">Opsætning</div>
+  <div class="tab active">Beregning</div>
+</div>
+
+<div class="page">
+  <h1>Beregning</h1>
+  <p class="lead">Indtast den beregning, der skal laves. Du kan bruge svar fra spørgsmål, regnetegn og indtaste tal i beregningen. Du kan kun vælge spørgsmål, hvor svarmulighederne har en scoreværdi. For tekstfelter kan du dog også tjekke, om feltet er udfyldt eller ej – det vil give score 1 og 0.</p>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Opsætning af beregning</h2>
+      <div class="tools">
+        <button class="btn-reset" id="resetBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          Nulstil beregning
+        </button>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <div class="expr" id="expr">
+        <input class="expr-input" id="exprInput" placeholder="Skriv tal eller indsæt en komponent…" autocomplete="off">
+        <button class="clear" id="clearBtn" title="Ryd seneste"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="M18 9l-6 6M12 9l6 6"/></svg></button>
+      </div>
+      <div class="hint" id="hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Skriv tal direkte, vælg operator, eller indsæt en spørgsmålskomponent fra listen.</div>
+
+      <div class="cols">
+        <div>
+          <div class="field-label">Vælg spørgsmålskomponent <span class="count-chip" id="compCount">6</span></div>
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="compSearch" placeholder="Søg komponenter…" autocomplete="off">
+          </div>
+          <div class="picklist" id="picklist"></div>
+        </div>
+        <div>
+          <div class="field-label">Vælg operator</div>
+          <div class="ops" id="ops"></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field-label">Beregnings-ID</div>
+      <div class="select-wrap">
+        <button class="select-trigger placeholder" id="idTrigger">
+          <span id="idLabel">Vælg type</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="dropdown" id="idDropdown">
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="idSearch" placeholder="Søg score…" autocomplete="off">
+          </div>
+          <div class="dd-list" id="ddList"></div>
+        </div>
+      </div>
+      <p class="id-desc">ID som kan bruges som reference ved opsætning af afviklingen af forløbet og/eller regler som danner opgaver.</p>
+
+    </div>
+  </div>
+</div>
+
+<div class="snackbar" id="snackbar">
+  <div class="ic" id="snackIc"></div>
+  <div class="txt" id="snackTxt"></div>
+  <button class="close" onclick="hideSnack()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+</div>
+
+<script>
+/* ---------- data ---------- */
+const components = [
+  {id:'q1', label:'Hvordan har du det i dag?', scored:true, type:'radio'},
+  {id:'q2', label:'Oplever du bekymringer, der er svære at kontrollere?', scored:true, type:'radio'},
+  {id:'q3', label:'Har du haft perioder med intens angst eller panik?', scored:true, type:'checkbox'},
+  {id:'q4', label:'Undgår du situationer, der giver dig angst?', scored:true, type:'radio'},
+  {id:'q5', label:'Fritekst: Beskriv din uge', scored:true, type:'text'},
+  {id:'q6', label:'Hvor mange dage har du følt dig urolig?', scored:true, type:'number'},
+];
+
+const typeMeta = {
+  radio:    {label:'Enkeltvalg', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"/></svg>'},
+  checkbox: {label:'Flervalg', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-6"/></svg>'},
+  text:     {label:'Fritekst', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg>'},
+  number:   {label:'Tal', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/></svg>'},
+};
+
+const operators = ['+','−','×','÷','(',')'];
+
+// ~30 psykiatriske score-beregninger, grupperet
+const scores = [
+  {g:'Angst', items:[
+    {c:'GAD-7', f:'Generalized Anxiety Disorder 7'},
+    {c:'GAD-2', f:'Generalized Anxiety Disorder 2'},
+    {c:'PSWQ', f:'Penn State Worry Questionnaire'},
+    {c:'PDSS', f:'Panic Disorder Severity Scale'},
+    {c:'SPIN', f:'Social Phobia Inventory'},
+    {c:'LSAS', f:'Liebowitz Social Anxiety Scale'},
+    {c:'HAM-A', f:'Hamilton Anxiety Rating Scale'},
+  ]},
+  {g:'Depression', items:[
+    {c:'PHQ-9', f:'Patient Health Questionnaire 9'},
+    {c:'PHQ-2', f:'Patient Health Questionnaire 2'},
+    {c:'MADRS', f:'Montgomery–Åsberg Depression Rating Scale'},
+    {c:'MADRS-S', f:'MADRS – selvrapportering'},
+    {c:'BDI-II', f:'Beck Depression Inventory II'},
+    {c:'HAM-D', f:'Hamilton Depression Rating Scale'},
+    {c:'EPDS', f:'Edinburgh Postnatal Depression Scale'},
+    {c:'QIDS-SR', f:'Quick Inventory of Depressive Symptomatology'},
+  ]},
+  {g:'Stress & trivsel', items:[
+    {c:'PSS', f:'Perceived Stress Scale'},
+    {c:'WHO-5', f:'WHO-5 Trivselsindeks'},
+    {c:'CBSI', f:'Copenhagen Burnout Inventory'},
+    {c:'MDI', f:'Major Depression Inventory'},
+    {c:'SCL-90', f:'Symptom Checklist 90'},
+  ]},
+  {g:'Traume & OCD', items:[
+    {c:'PCL-5', f:'PTSD Checklist for DSM-5'},
+    {c:'IES-R', f:'Impact of Event Scale – Revised'},
+    {c:'Y-BOCS', f:'Yale–Brown Obsessive Compulsive Scale'},
+    {c:'OCI-R', f:'Obsessive-Compulsive Inventory – Revised'},
+  ]},
+  {g:'Funktion & risiko', items:[
+    {c:'WSAS', f:'Work and Social Adjustment Scale'},
+    {c:'SDS', f:'Sheehan Disability Scale'},
+    {c:'C-SSRS', f:'Columbia Suicide Severity Rating Scale'},
+    {c:'AUDIT', f:'Alcohol Use Disorders Identification Test'},
+    {c:'DUDIT', f:'Drug Use Disorders Identification Test'},
+    {c:'CGI-S', f:'Clinical Global Impression – Severity'},
+  ]},
+];
+
+/* ---------- expression state ---------- */
+let tokens = []; // {type:'comp'|'num'|'op', value, label?}
+let selectedScore = null;
+
+const expr = document.getElementById('expr');
+const exprInput = document.getElementById('exprInput');
+const hint = document.getElementById('hint');
+
+function renderExpr(){
+  // remove existing tokens (keep input + clear button)
+  [...expr.querySelectorAll('.token')].forEach(t=>t.remove());
+  tokens.forEach((tk,i)=>{
+    const el = document.createElement('span');
+    el.className = 'token '+tk.type;
+    el.innerHTML = (tk.type==='comp'? shortLabel(tk.label) : tk.value);
+    if(tk.type!=='op'){
+      const x = document.createElement('span');
+      x.className='x'; x.textContent='×';
+      x.onclick=(e)=>{e.stopPropagation(); tokens.splice(i,1); renderExpr(); validateLive();};
+      el.appendChild(x);
+    }
+    expr.insertBefore(el, exprInput);
+  });
+}
+function shortLabel(l){ return l.length>22? l.slice(0,20)+'…' : l; }
+
+function addToken(tk){ tokens.push(tk); renderExpr(); validateLive(); exprInput.focus(); }
+
+// type numbers / operators directly in the input
+exprInput.addEventListener('keydown',(e)=>{
+  const v = exprInput.value.trim();
+  if(e.key==='Enter' || e.key===' '){
+    if(v!==''){ commitTyped(v); e.preventDefault(); }
+  }
+  if(e.key==='Backspace' && exprInput.value==='' && tokens.length){
+    tokens.pop(); renderExpr(); validateLive();
+  }
+  // operator keystrokes
+  const opMap={'+':'+','-':'−','*':'×','/':'÷','(':'(',')':')'};
+  if(opMap[e.key] && v===''){ addToken({type:'op',value:opMap[e.key]}); e.preventDefault(); }
+});
+exprInput.addEventListener('blur',()=>{ const v=exprInput.value.trim(); if(v!=='') commitTyped(v); });
+
+function commitTyped(v){
+  // split numbers; allow decimals with . or ,
+  if(/^[0-9]+([.,][0-9]+)?$/.test(v)){
+    addToken({type:'num',value:v.replace(',','.')});
+  }
+  exprInput.value='';
+}
+expr.addEventListener('click',()=>exprInput.focus());
+
+document.getElementById('clearBtn').onclick=(e)=>{e.stopPropagation(); if(tokens.length){tokens.pop(); renderExpr(); validateLive();}};
+
+/* ---------- operators ---------- */
+const opsEl = document.getElementById('ops');
+operators.forEach(o=>{
+  const b=document.createElement('button');
+  b.className='op'; b.textContent=o;
+  b.onclick=()=>addToken({type:'op',value:o});
+  opsEl.appendChild(b);
+});
+
+/* ---------- component picker ---------- */
+const picklist=document.getElementById('picklist');
+const compSearch=document.getElementById('compSearch');
+function renderComps(){
+  const q=compSearch.value.toLowerCase();
+  const list=components.filter(c=>c.label.toLowerCase().includes(q));
+  document.getElementById('compCount').textContent=list.length;
+  picklist.innerHTML='';
+  if(!list.length){ picklist.innerHTML='<div class="empty-pick">Ingen komponenter matcher søgningen.</div>'; return; }
+  list.forEach(c=>{
+    const row=document.createElement('div');
+    row.className='pickrow'+(c.scored?'':' disabled');
+    const t=typeMeta[c.type];
+    row.innerHTML=`<span class="pick-main"><span class="qtype ${c.type}" title="${t.label}">${t.icon}</span><span class="pick-text">${c.label}${c.scored?'':' <span class=noscore>(ingen scoreværdi)</span>'}</span></span><span class="add">+</span>`;
+    if(c.scored) row.onclick=()=>addToken({type:'comp',value:c.id,label:c.label});
+    picklist.appendChild(row);
+  });
+}
+compSearch.addEventListener('input',renderComps);
+renderComps();
+
+/* ---------- beregnings-id dropdown ---------- */
+const idTrigger=document.getElementById('idTrigger');
+const idDropdown=document.getElementById('idDropdown');
+const idLabel=document.getElementById('idLabel');
+const idSearch=document.getElementById('idSearch');
+const ddList=document.getElementById('ddList');
+
+idTrigger.onclick=(e)=>{e.stopPropagation(); const open=idDropdown.classList.toggle('open'); idTrigger.classList.toggle('open',open); if(open){idSearch.value='';renderScores();idSearch.focus();}};
+document.addEventListener('click',(e)=>{ if(!idDropdown.contains(e.target)&&e.target!==idTrigger){idDropdown.classList.remove('open');idTrigger.classList.remove('open');} });
+
+function renderScores(){
+  const q=idSearch.value.toLowerCase();
+  ddList.innerHTML='';
+  let any=false;
+  scores.forEach(grp=>{
+    const matches=grp.items.filter(it=>it.c.toLowerCase().includes(q)||it.f.toLowerCase().includes(q));
+    if(!matches.length) return;
+    any=true;
+    const g=document.createElement('div'); g.className='dd-group'; g.textContent=grp.g; ddList.appendChild(g);
+    matches.forEach(it=>{
+      const r=document.createElement('div');
+      r.className='dd-row'+(selectedScore&&selectedScore.c===it.c?' sel':'');
+      r.innerHTML=`<span><span class="code">${it.c}</span> &nbsp;<span class="full">${it.f}</span></span><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`;
+      r.onclick=()=>{ selectedScore=it; idLabel.innerHTML=`<span class="val">${it.c} <small>${it.f}</small></span>`; idTrigger.classList.remove('placeholder'); idDropdown.classList.remove('open'); idTrigger.classList.remove('open'); validateLive(); };
+      ddList.appendChild(r);
+    });
+  });
+  if(!any) ddList.innerHTML='<div class="dd-empty">Ingen score matcher søgningen.</div>';
+}
+idSearch.addEventListener('input',renderScores);
+idSearch.addEventListener('click',e=>e.stopPropagation());
+
+/* ---------- validation ---------- */
+function validate(){
+  const errs=[];
+  if(!tokens.length) errs.push('beregningen er tom');
+  // balanced parentheses
+  let bal=0; tokens.forEach(t=>{if(t.value==='(')bal++;if(t.value===')')bal--; if(bal<0)bal=-99;});
+  if(bal!==0) errs.push('parenteser er ikke afbalancerede');
+  // no two operators in a row (except parens), no trailing operator
+  const ops=['+','−','×','÷'];
+  for(let i=0;i<tokens.length;i++){
+    const cur=tokens[i], nxt=tokens[i+1];
+    if(ops.includes(cur.value)&&(!nxt||ops.includes(nxt.value))) {errs.push('to regnetegn i træk eller manglende værdi'); break;}
+  }
+  if(ops.includes(tokens[0]?.value)) errs.push('beregningen kan ikke starte med et regnetegn');
+  if(!selectedScore) errs.push('beregnings-ID mangler');
+  return [...new Set(errs)];
+}
+function validateLive(){
+  // No validation while building. Once Gem has flagged errors, clear them live as the user edits.
+  if(!hasTriedSave) return;
+  const errs=validate().filter(e=>e!=='beregnings-ID mangler');
+  expr.classList.toggle('error', errs.length>0);
+  if(errs.length>0){
+    hint.classList.add('err'); hint.querySelector('svg').nextSibling.textContent=' '+capitalize(errs[0]);
+  } else {
+    hint.classList.remove('err'); hint.querySelector('svg').nextSibling.textContent=' Skriv tal direkte, vælg operator, eller indsæt en spørgsmålskomponent fra listen.';
+  }
+}
+function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+/* ---------- save ---------- */
+let hasTriedSave=false;
+document.getElementById('gemBtn').onclick=()=>{
+  hasTriedSave=true;
+  const errs=validate();
+  if(errs.length){
+    showSnack('err','Beregningen kan ikke gemmes', errs.length===1? capitalize(errs[0])+'.' : `${errs.length} ting mangler: ${errs.join(', ')}.`);
+    expr.classList.toggle('error', errs.some(e=>e!=='beregnings-ID mangler'));
+    if(expr.classList.contains('error')){
+      hint.classList.add('err'); hint.querySelector('svg').nextSibling.textContent=' '+capitalize(errs.find(e=>e!=='beregnings-ID mangler')||errs[0]);
+    }
+  } else {
+    hasTriedSave=false;
+    expr.classList.remove('error'); hint.classList.remove('err');
+    showSnack('ok','Beregning gemt', `Beregnings-ID ${selectedScore.c} er sat. Reference kan nu bruges i afvikling og regler.`);
+  }
+};
+
+const snackbar=document.getElementById('snackbar');
+let snackTimer;
+function showSnack(type,title,sub){
+  clearTimeout(snackTimer);
+  snackbar.className='snackbar '+type+' show';
+  document.getElementById('snackIc').innerHTML = type==='ok'
+    ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>'
+    : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>';
+  document.getElementById('snackTxt').innerHTML=`<b>${title}</b><span>${sub}</span>`;
+  snackTimer=setTimeout(hideSnack,5200);
+}
+function hideSnack(){ snackbar.classList.remove('show'); }
+
+/* ---------- reset ---------- */
+document.getElementById('resetBtn').onclick=()=>{
+  tokens=[]; selectedScore=null; hasTriedSave=false;
+  expr.classList.remove('error'); hint.classList.remove('err');
+  renderExpr();
+  exprInput.value='';
+  hint.querySelector('svg').nextSibling.textContent=' Skriv tal direkte, vælg operator, eller indsæt en spørgsmålskomponent fra listen.';
+  idLabel.textContent='Vælg type'; idTrigger.classList.add('placeholder');
+  showSnack('ok','Beregning nulstillet','Felt og beregnings-ID er ryddet.');
+};
+</script>
+</body>
+</html>
