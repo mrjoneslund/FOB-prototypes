@@ -98,19 +98,19 @@
   .section-title{ font-size:15px; font-weight:700; color:var(--ink); letter-spacing:-.01em;}
   .section-hint{ font-size:12.5px; color:var(--muted);}
   /* frequency panel */
-  .freq-row{ display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap;}
-  .seg{ display:inline-flex; background:var(--paper); border:1px solid var(--line-strong); border-radius:var(--radius-sm); padding:4px; flex-shrink:0; align-self:flex-end; margin-bottom:1px;}
+  .freq-controls{ display:flex; align-items:flex-end; gap:16px; flex-wrap:nowrap;}
+  .seg{ display:inline-flex; background:var(--paper); border:1px solid var(--line-strong); border-radius:var(--radius-sm); padding:4px; flex-shrink:0;}
   .seg-opt{ font-family:inherit; font-size:13.5px; font-weight:600; border:none; background:none; color:var(--muted); padding:9px 16px; border-radius:6px; cursor:pointer;}
   .seg-opt.active{ background:var(--indigo); color:#fff;}
-  .freq-field{ display:flex; flex-direction:column; gap:6px;}
+  .freq-field{ display:flex; flex-direction:column; gap:6px; flex:1; min-width:0;}
   .freq-flabel{ font-size:13px; color:var(--ink); font-weight:500;}
-  .freq-input{ display:flex; align-items:center; gap:8px; background:var(--paper); border:1px solid var(--line-strong); border-radius:var(--radius-sm); padding:0 12px; min-width:200px;}
+  .freq-input{ display:flex; align-items:center; gap:8px; background:var(--paper); border:1px solid var(--line-strong); border-radius:var(--radius-sm); padding:0 12px; min-width:0;}
   .freq-input input{ font-family:inherit; font-size:14px; color:var(--ink); border:none; outline:none; background:none; padding:11px 0; flex:1; width:100%;}
   .freq-input input[type=number]::-webkit-inner-spin-button,.freq-input input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0;}
   .freq-input input[type=number]{ -moz-appearance:textfield;}
   .freq-input input::placeholder{ color:var(--faint);}
   .freq-suffix{ font-size:13px; color:var(--muted); flex-shrink:0;}
-  .freq-guide{ flex:1; min-width:220px; background:#EAF4FB; border:1px solid #BFE0F2; border-radius:var(--radius-md); padding:14px 16px; align-self:stretch;}
+  .freq-guide{ margin-top:16px; background:#EAF4FB; border:1px solid #BFE0F2; border-radius:var(--radius-md); padding:14px 16px;}
   .freq-guide-title{ font-size:14px; font-weight:700; color:#1B5C82; margin-bottom:5px;}
   .freq-guide p{ font-size:12.5px; color:#37596E; line-height:1.5;}
   .logic-field{ background:none; border:none; border-radius:0; padding:0; display:flex; align-items:center; gap:14px;}
@@ -536,7 +536,7 @@ function render(){
     const freqPanel = m.repeat ? `
       <div class="section">
         <div class="section-head"><span class="section-title">Gentagelse af modul</span><span class="section-hint">Hvor ofte borgeren kan gennemføre modulet</span></div>
-        <div class="freq-row">
+        <div class="freq-controls">
           <div class="seg">
             <button class="seg-opt ${m.freqMode==="antal"?"active":""}" data-act="freq-mode" data-id="${m.id}" data-mode="antal">Antal gange</button>
             <button class="seg-opt ${m.freqMode==="periode"?"active":""}" data-act="freq-mode" data-id="${m.id}" data-mode="periode">Periode</button>
@@ -548,12 +548,12 @@ function render(){
               : `<label class="freq-flabel">Periode (slutdato)</label>
                  <div class="freq-input"><input type="date" value="${m.freqDate}" data-act="freq-date" data-id="${m.id}"></div>`}
           </div>
-          <div class="freq-guide">
-            <div class="freq-guide-title">Vejledning</div>
-            <p>${m.freqMode==="periode"
-                 ? "Ved valg af periode kan borgeren gentage modulet, så ofte de vil, indtil den valgte slutdato overskrides."
-                 : "Ved valg af antal gange kan borgeren gentage modulet det fastsatte antal gange."}</p>
-          </div>
+        </div>
+        <div class="freq-guide">
+          <div class="freq-guide-title">Vejledning</div>
+          <p>${m.freqMode==="periode"
+               ? "Ved valg af periode kan borgeren gentage modulet, så ofte de vil, indtil den valgte slutdato overskrides."
+               : "Ved valg af antal gange kan borgeren gentage modulet det fastsatte antal gange."}</p>
         </div>
       </div>` : "";
     return `
