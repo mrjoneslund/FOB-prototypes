@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visningsregler</title>
+<style>
+  :root {
+    --ink: #0d1b2a;
+    --ink-90: #16263a;
+    --paper: #ffffff;
+    --line: #e2e6ec;
+    --line-strong: #c8cfd9;
+    --muted: #5a6675;
+    --muted-soft: #8a94a3;
+    --pill: #16263a;
+    --pill-text: #ffffff;
+    --accent: #9be814;
+    --accent-ring: #7cc70a;
+    --danger: #d23b3b;
+    --danger-soft: #f7dada;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --shadow-card: 0 1px 2px rgba(13,27,42,.04), 0 6px 18px rgba(13,27,42,.05);
+    --shadow-modal: 0 18px 60px rgba(13,27,42,.28);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    margin: 0;
+    background: #f3f5f8;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px 80px;
+  }
+
+  .shell {
+    width: 100%;
+    max-width: 440px;
+  }
+
+  /* ---- Header ---- */
+  .topbar {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 18px 18px 0 0;
+    padding: 18px 22px 20px;
+  }
+  .topbar .eyebrow {
+    font-size: 13px;
+    color: #9fb0c2;
+    margin: 0 0 2px;
+  }
+  .topbar h1 {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -.01em;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    background: var(--ink);
+    padding: 0 16px 16px;
+    border-radius: 0;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 13px 0;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    cursor: pointer;
+    background: #fff;
+    color: var(--ink);
+  }
+  .tab:first-child { border-radius: 22px 0 0 22px; }
+  .tab:last-child  { border-radius: 0 22px 22px 0; }
+  .tab.inactive {
+    background: var(--ink-90);
+    color: #fff;
+    border: 1px solid #2b3c52;
+  }
+
+  .panel {
+    background: var(--paper);
+    border-radius: 0 0 18px 18px;
+    padding: 22px 22px 28px;
+    box-shadow: var(--shadow-card);
+    min-height: 950px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---- Master toggle ---- */
+  .master {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    margin-bottom: 18px;
+    background: #fbfcfd;
+  }
+  .master .label {
+    flex: 1;
+  }
+  .master .label strong {
+    display: block;
+    font-size: 15px;
+  }
+  .master .label span {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .switch {
+    position: relative;
+    width: 46px;
+    height: 27px;
+    flex: 0 0 auto;
+    cursor: pointer;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .track {
+    position: absolute;
+    inset: 0;
+    background: var(--line-strong);
+    border-radius: 999px;
+    transition: background .18s ease;
+  }
+  .thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 21px; height: 21px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .18s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  }
+  .switch input:checked + .track { background: var(--accent-ring); }
+  .switch input:checked + .track .thumb { transform: translateX(19px); }
+  .switch input:focus-visible + .track { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .intro {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 0 18px;
+  }
+
+  /* ---- Disabled dim ---- */
+  .rules { display: block; }
+  .rules.is-empty { flex: 1; display: flex; }
+  .rules.disabled {
+    opacity: .45;
+    pointer-events: none;
+    filter: grayscale(.2);
+  }
+
+  /* ---- Rule card ---- */
+  .card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 18px 16px;
+    background: #fff;
+    position: relative;
+    box-shadow: var(--shadow-card);
+  }
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .card-head .tag {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted-soft);
+  }
+  .trash {
+    border: 1.5px solid var(--danger);
+    background: #fff;
+    color: var(--danger);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+  }
+  .trash:hover { background: var(--danger-soft); }
+  .trash:active { transform: scale(.92); }
+  .trash svg { width: 15px; height: 15px; }
+
+  /* Row: [keyword chip] [verb] [slot pill] ... [remove] */
+  .cond {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 0;
+  }
+  .cond + .cond,
+  .joiner + .cond { border-top: 1px dashed var(--line); }
+
+  /* Keyword chip (HVIS / OG) */
+  .kw {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 10px;
+    padding: 9px 16px 9px 13px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    flex: 0 0 auto;
+  }
+  .kw svg { width: 16px; height: 16px; }
+  .kw-if  { background: #e8edff; color: #3b54d6; }
+  .kw-and { background: #efe9fb; color: #6b3fc4; }
+
+  .verb {
+    font-size: 14px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  /* Slot pill (the dashed selector) */
+  .slot {
+    background: #fff;
+    color: var(--ink);
+    border: 1.5px dashed var(--line-strong);
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: border-color .15s, background .15s, color .15s, transform .08s;
+  }
+  .slot:hover { border-color: var(--ink); }
+  .slot:active { transform: scale(.98); }
+  .slot.filled {
+    background: var(--ink);
+    color: #fff;
+    border: 1.5px solid var(--ink);
+  }
+  .slot.filled:hover { background: var(--ink-90); border-color: var(--ink-90); }
+  .slot:disabled { opacity: .4; cursor: not-allowed; }
+
+  .joiner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted-soft);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: 4px 0;
+  }
+  .joiner::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .cond-trash {
+    margin-left: auto;
+    border: none;
+    background: transparent;
+    color: var(--muted-soft);
+    cursor: pointer;
+    font-size: 19px;
+    line-height: 1;
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    transition: color .15s, background .15s;
+  }
+  .cond-trash:hover { color: var(--danger); background: var(--danger-soft); }
+  .cond-trash.hidden { visibility: hidden; }
+
+  /* Dashed "add condition" button — matches ECA */
+  .add-cond {
+    margin-top: 14px;
+    width: 100%;
+    border: 1.5px dashed var(--line-strong);
+    background: #fff;
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    transition: border-color .15s, background .15s;
+  }
+  .add-cond:hover { border-color: var(--accent-ring); background: #fbfef4; }
+  .add-cond .plus {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--ink);
+    display: grid;
+    place-items: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    flex: 0 0 auto;
+  }
+
+  /* ---- OR separator ---- */
+  .or-sep {
+    text-align: center;
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 14px;
+    margin: 14px 0;
+    position: relative;
+  }
+  .or-sep::before, .or-sep::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: calc(50% - 32px);
+    height: 1px;
+    background: var(--line);
+  }
+  .or-sep::before { left: 0; }
+  .or-sep::after { right: 0; }
+
+  /* ---- Add rule ---- */
+  .add-rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+  .add-rule .icon {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2.5px solid var(--ink);
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .add-rule span {
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .add-rule:hover .icon { transform: scale(1.05); }
+
+  /* ---- Empty state ---- */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    text-align: center;
+    color: var(--muted);
+    padding: 40px 16px;
+  }
+  .empty-state .es-icon {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: #f3f5f8;
+    display: grid;
+    place-items: center;
+    color: var(--muted-soft);
+  }
+  .empty-state .es-icon svg { width: 26px; height: 26px; }
+  .empty-state .es-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .empty-state .es-sub {
+    font-size: 13.5px;
+    color: var(--muted);
+    max-width: 260px;
+    line-height: 1.5;
+    margin-top: -8px;
+  }
+
+  /* Solid pill button */
+  .btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 22px 12px 16px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, transform .08s;
+  }
+  .btn-add:hover { background: var(--ink-90); }
+  .btn-add:active { transform: scale(.98); }
+  .btn-add .dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    flex: 0 0 auto;
+  }
+
+  /* ---- Modal ---- */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13,27,42,.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: var(--shadow-modal);
+    width: 100%;
+    max-width: 380px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 22px 12px;
+  }
+  .modal-head h2 {
+    font-size: 21px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .modal-close {
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--muted);
+    line-height: 1;
+    padding: 4px 8px;
+  }
+  .modal-close:hover { color: var(--ink); }
+
+  .search {
+    margin: 0 22px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 11px 14px;
+  }
+  .search svg { width: 18px; height: 18px; color: var(--muted); flex: 0 0 auto; }
+  .search input {
+    border: none;
+    outline: none;
+    font-size: 15px;
+    width: 100%;
+    font-family: var(--font);
+  }
+
+  .modal-body {
+    overflow-y: auto;
+    padding: 6px 12px 18px;
+  }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .opt:hover { background: #f3f6fa; }
+  .opt .kid {
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--ink);
+    flex: 0 0 70px;
+  }
+  .opt .qtext {
+    font-size: 14px;
+    color: var(--ink-90);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .check-opt {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .check-opt:hover { background: #f3f6fa; }
+  .check-opt .box {
+    width: 22px; height: 22px;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+  }
+  .check-opt .box svg { width: 14px; height: 14px; opacity: 0; color: #fff; }
+  .check-opt.checked .box { background: var(--ink); }
+  .check-opt.checked .box svg { opacity: 1; }
+  .check-opt .ctext { font-size: 15px; }
+
+  .modal-foot {
+    padding: 14px 22px 20px;
+    border-top: 1px solid var(--line);
+  }
+  .btn-primary {
+    width: 100%;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-primary:hover { background: var(--ink-90); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <p class="eyebrow">Tilpas komponent</p>
+      <h1>Billede</h1>
+    </div>
+    <div class="tabs">
+      <button class="tab inactive">Tilpas komponent</button>
+      <button class="tab">Regler</button>
+    </div>
+
+    <div class="panel">
+      <div class="master">
+        <div class="label">
+          <strong>Visningsregler</strong>
+          <span id="masterStatus">Komponenten vises altid</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="masterToggle">
+          <span class="track"><span class="thumb"></span></span>
+        </label>
+      </div>
+
+      <p class="intro" id="intro">Tilføj visningsregler for at styre, hvornår komponenten vises — fx ud fra svar i en anden komponent. Flere kort betyder, at <strong>ét</strong> af dem skal være opfyldt (ELLER).</p>
+
+      <div class="rules" id="rules"></div>
+
+      <button class="btn-add" id="addRule" style="margin-top:18px;">
+        <span class="dot">+</span>
+        Tilføj visningsregel
+      </button>
+    </div>
+  </div>
+
+  <!-- Component picker modal -->
+  <div class="overlay" id="compModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Vælg komponent</h2>
+        <button class="modal-close" data-close>&times;</button>
+      </div>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="compSearch" placeholder="Søg...">
+      </div>
+      <div class="modal-body" id="compList"></div>
+    </div>
+  </div>
+
+  <!-- Answer picker modal -->
+  <div class="overlay" id="ansModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Vælg svarmulighed(er)</h2>
+        <button class="modal-close" data-close>&times;</button>
+      </div>
+      <div class="modal-body" id="ansList"></div>
+      <div class="modal-foot">
+        <button class="btn-primary" id="ansConfirm">Vælg</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  // ---- Mock data ----
+  const COMPONENTS = [
+    {kid:"KID-001", q:"Hvem bor du sammen med?"},
+    {kid:"KID-002", q:"Hvem deler du hus med?"},
+    {kid:"KID-003", q:"Hvilke aktiviteter dyrker du i fritiden?"},
+    {kid:"KID-004", q:"Hvordan har du det i skolen?"},
+    {kid:"KID-005", q:"Har du nogle søskende?"},
+    {kid:"KID-006", q:"Hvilke sprog taler du derhjemme?"},
+    {kid:"KID-007", q:"Hvordan ville du beskrive bedste ven?"},
+    {kid:"KID-008", q:"Hvordan håndterer du konflikter?"},
+    {kid:"KID-009", q:"Hvad gør dig glad i sociale situationer?"},
+    {kid:"KID-010", q:"Hvad betyder familien for dig?"},
+    {kid:"KID-011", q:"Hvordan kommunikerer du?"},
+    {kid:"KID-012", q:"Hvilke personer inspirerer dig?"},
+    {kid:"KID-013", q:"Hvordan føler du dig i store forsamlinger?"},
+    {kid:"KID-014", q:"Hvad kan du bedst lide at lave?"},
+    {kid:"KID-015", q:"Hvordan støtter dine venner dig?"},
+    {kid:"KID-016", q:"Hvordan oplever du samarbejde?"},
+  ];
+  const ANSWERS = {
+    default: ["Hvem deler du hus med?","Hvem er dine bofæller?","Hvem bor under samme tag?","Hvem lever du sammen med?","Hvem har du som roommate?"]
+  };
+
+  // ---- State ----
+  // rules = [ { conditions: [ {comp:{kid,q}|null, answers:[...]} ] } ]
+  let rules = [];
+  let enabled = false;
+  let active = null; // {ruleIdx, condIdx, type}
+
+  const rulesEl = document.getElementById('rules');
+  const masterToggle = document.getElementById('masterToggle');
+  const masterStatus = document.getElementById('masterStatus');
+
+  function uid(){ return Math.random().toString(36).slice(2,8); }
+
+  function newCondition(){ return {comp:null, answers:[]}; }
+  function newRule(){ return {id:uid(), conditions:[newCondition()]}; }
+
+  const introEl = document.getElementById('intro');
+  const bottomAddEl = document.getElementById('addRule');
+
+  // ---- Render ----
+  function render(){
+    rulesEl.innerHTML = '';
+    rulesEl.classList.toggle('disabled', !enabled && rules.length>0);
+
+    const isEmpty = rules.length === 0;
+    rulesEl.classList.toggle('is-empty', isEmpty);
+    introEl.style.display = isEmpty ? 'none' : '';
+    bottomAddEl.style.display = isEmpty ? 'none' : '';
+
+    if(isEmpty){
+      const e = document.createElement('div');
+      e.className = 'empty-state';
+      e.innerHTML = `
+        <div class="es-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <div class="es-title">Ingen visningsregler</div>
+        <div class="es-sub">Komponenten vises altid — tilføj en regel for at sætte betingelser for visning.</div>
+        <button class="btn-add" id="emptyAdd"><span class="dot">+</span> Tilføj regel</button>`;
+      rulesEl.appendChild(e);
+      document.getElementById('emptyAdd').onclick = addRule;
+      updateStatus();
+      return;
+    }
+
+    rules.forEach((rule, rIdx) => {
+      if(rIdx > 0){
+        const sep = document.createElement('div');
+        sep.className = 'or-sep';
+        sep.textContent = 'Eller';
+        rulesEl.appendChild(sep);
+      }
+
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const head = document.createElement('div');
+      head.className = 'card-head';
+      head.innerHTML = `<span class="tag">Regel ${rIdx+1}</span>`;
+      const trash = document.createElement('button');
+      trash.className = 'trash';
+      trash.title = 'Slet regel';
+      trash.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>`;
+      trash.onclick = () => { rules.splice(rIdx,1); render(); };
+      head.appendChild(trash);
+      card.appendChild(head);
+
+      rule.conditions.forEach((cond, cIdx) => {
+        const row = document.createElement('div');
+        row.className = 'cond';
+
+        // Keyword chip: HVIS (first) / OG (rest)
+        const kw = document.createElement('span');
+        if(cIdx === 0){
+          kw.className = 'kw kw-if';
+          kw.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 13h6l-1 9 9-11h-6l1-8z"/></svg> HVIS`;
+        } else {
+          kw.className = 'kw kw-and';
+          kw.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg> OG`;
+        }
+        row.appendChild(kw);
+
+        const compSlot = document.createElement('button');
+        compSlot.className = 'slot' + (cond.comp ? ' filled' : '');
+        compSlot.textContent = cond.comp ? cond.comp.kid : 'Komponent';
+        compSlot.title = cond.comp ? cond.comp.q : '';
+        compSlot.onclick = () => openComp(rIdx, cIdx);
+        row.appendChild(compSlot);
+
+        const verb = document.createElement('span');
+        verb.className = 'verb';
+        verb.textContent = 'er lig med';
+        row.appendChild(verb);
+
+        const ansSlot = document.createElement('button');
+        ansSlot.className = 'slot' + (cond.answers.length ? ' filled' : '');
+        ansSlot.textContent = cond.answers.length
+          ? (cond.answers.length === 1 ? cond.answers[0] : cond.answers.length + ' svar')
+          : 'Svarmulighed';
+        if(!cond.comp){ ansSlot.disabled = true; }
+        ansSlot.onclick = () => { if(cond.comp) openAns(rIdx, cIdx); };
+        row.appendChild(ansSlot);
+
+        const ct = document.createElement('button');
+        ct.className = 'cond-trash' + (rule.conditions.length > 1 ? '' : ' hidden');
+        ct.innerHTML = '&times;';
+        ct.title = 'Fjern betingelse';
+        ct.onclick = () => { rule.conditions.splice(cIdx,1); render(); };
+        row.appendChild(ct);
+
+        card.appendChild(row);
+      });
+
+      const addCond = document.createElement('button');
+      addCond.className = 'add-cond';
+      addCond.innerHTML = `<span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;stroke:#16263a;"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg></span> Tilføj OG (betingelse)`;
+      addCond.onclick = () => { rule.conditions.push(newCondition()); render(); };
+      card.appendChild(addCond);
+
+      rulesEl.appendChild(card);
+    });
+
+    updateStatus();
+  }
+
+  function updateStatus(){
+    if(!enabled){
+      masterStatus.textContent = 'Komponenten vises altid';
+    } else if(rules.length === 0){
+      masterStatus.textContent = 'Visningsregler slået til — ingen regler endnu';
+    } else {
+      masterStatus.textContent = 'Komponenten vises kun, når reglerne er opfyldt';
+    }
+  }
+
+  // ---- Master toggle ----
+  masterToggle.addEventListener('change', e => {
+    enabled = e.target.checked;
+    render();
+  });
+
+  // ---- Add rule ----
+  function addRule(){
+    rules.push(newRule());
+    if(!enabled){ enabled = true; masterToggle.checked = true; }
+    render();
+  }
+  document.getElementById('addRule').addEventListener('click', addRule);
+
+  // ---- Component modal ----
+  const compModal = document.getElementById('compModal');
+  const compList = document.getElementById('compList');
+  const compSearch = document.getElementById('compSearch');
+
+  function openComp(rIdx, cIdx){
+    active = {rIdx, cIdx, type:'comp'};
+    compSearch.value = '';
+    renderCompList('');
+    compModal.classList.add('open');
+    compSearch.focus();
+  }
+  function renderCompList(q){
+    const term = q.toLowerCase();
+    compList.innerHTML = '';
+    COMPONENTS.filter(c => c.kid.toLowerCase().includes(term) || c.q.toLowerCase().includes(term))
+      .forEach(c => {
+        const o = document.createElement('div');
+        o.className = 'opt';
+        o.innerHTML = `<span class="kid">${c.kid}</span><span class="qtext">${c.q}</span>`;
+        o.onclick = () => {
+          const cond = rules[active.rIdx].conditions[active.cIdx];
+          if(!cond.comp || cond.comp.kid !== c.kid){ cond.answers = []; }
+          cond.comp = c;
+          compModal.classList.remove('open');
+          render();
+        };
+        compList.appendChild(o);
+      });
+  }
+  compSearch.addEventListener('input', e => renderCompList(e.target.value));
+
+  // ---- Answer modal ----
+  const ansModal = document.getElementById('ansModal');
+  const ansList = document.getElementById('ansList');
+  const ansConfirm = document.getElementById('ansConfirm');
+  let ansSelection = [];
+
+  function openAns(rIdx, cIdx){
+    active = {rIdx, cIdx, type:'ans'};
+    const cond = rules[rIdx].conditions[cIdx];
+    ansSelection = [...cond.answers];
+    renderAnsList();
+    ansModal.classList.add('open');
+  }
+  function renderAnsList(){
+    const opts = ANSWERS.default;
+    ansList.innerHTML = '';
+    opts.forEach(a => {
+      const checked = ansSelection.includes(a);
+      const o = document.createElement('div');
+      o.className = 'check-opt' + (checked ? ' checked' : '');
+      o.innerHTML = `<span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-11"/></svg></span><span class="ctext">${a}</span>`;
+      o.onclick = () => {
+        const i = ansSelection.indexOf(a);
+        if(i>=0) ansSelection.splice(i,1); else ansSelection.push(a);
+        renderAnsList();
+        ansConfirm.disabled = ansSelection.length === 0;
+      };
+      ansList.appendChild(o);
+    });
+    ansConfirm.disabled = ansSelection.length === 0;
+  }
+  ansConfirm.addEventListener('click', () => {
+    rules[active.rIdx].conditions[active.cIdx].answers = [...ansSelection];
+    ansModal.classList.remove('open');
+    render();
+  });
+
+  // ---- Close handlers ----
+  document.querySelectorAll('[data-close]').forEach(b => b.onclick = e => {
+    e.target.closest('.overlay').classList.remove('open');
+  });
+  document.querySelectorAll('.overlay').forEach(ov => ov.addEventListener('click', e => {
+    if(e.target === ov) ov.classList.remove('open');
+  }));
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape') document.querySelectorAll('.overlay.open').forEach(o => o.classList.remove('open'));
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
