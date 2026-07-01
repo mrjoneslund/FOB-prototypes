@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Afviklingslogik – Prototype</title>
+<style>
+  :root {
+    --indigo:#2A2A5E; --accent:#3D3DB0; --cream:#FBF8F3; --paper:#FFFFFF;
+    --ink:#1A1A2E; --muted:#6B6B85; --faint:#9A9AB0; --line:#E7E4DC; --line-strong:#D9D5CB;
+    --kladde-bg:#FBE9B8; --kladde-ink:#7A5A0F;
+    --hvis-bg:#E7ECFD; --hvis-ink:#2F5BD6;
+    --og-bg:#EFEAFB;   --og-ink:#6D44C9;
+    --saa-bg:#E5F3E9;  --saa-ink:#2E9457;
+    --slot-line:#B9B5C4; --slot-ink:#4A4A60; --slot-empty:#8E8AA0;
+    --shadow-card:0 1px 2px rgba(26,26,46,.04),0 4px 16px rgba(26,26,46,.05);
+    --shadow-pop:0 10px 30px rgba(26,26,46,.16);
+    --radius-lg:16px; --radius-md:12px; --radius-sm:9px; --radius-pill:999px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(180deg,#EDEAE3 0%,#E6E2DA 100%); color:var(--ink);
+    -webkit-font-smoothing:antialiased; padding:28px 18px 80px; min-height:100vh; }
+  .browser { max-width:1180px; margin:0 auto; background:var(--cream); border-radius:14px; overflow:hidden;
+    box-shadow:0 24px 60px rgba(20,20,40,.22),0 4px 12px rgba(20,20,40,.10); border:1px solid rgba(255,255,255,.6); }
+  .chrome{ background:#DEDAD2; padding:11px 16px 0;}
+  .chrome-top{ display:flex; align-items:center; gap:10px;}
+  .dots{ display:flex; gap:7px;} .dot{ width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#FF5F57;}.dot.y{background:#FEBC2E;}.dot.g{background:#28C840;}
+  .tab{ margin-left:8px; background:var(--cream); border-radius:9px 9px 0 0; padding:8px 14px; font-size:12.5px;
+    display:flex; align-items:center; gap:8px; min-width:150px; margin-bottom:-1px;}
+  .tab .fav{ width:13px;height:13px;border-radius:3px;background:linear-gradient(135deg,var(--accent),#7B7BE0);}
+  .tab .x{ margin-left:auto; color:var(--faint);}
+  .addr{ display:flex; align-items:center; gap:12px; padding:9px 0 11px;}
+  .addr .nav{ display:flex; gap:14px; color:var(--faint); font-size:15px; padding-left:2px;}
+  .urlbar{ flex:1; background:var(--cream); border-radius:var(--radius-pill); padding:7px 14px; font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:8px;}
+  .appbar{ background:var(--paper); padding:16px 26px; display:flex; align-items:center; gap:14px; border-bottom:1px solid var(--line);}
+  .back{ width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line-strong);display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;background:none;flex-shrink:0;}
+  .title-wrap{ display:flex; flex-direction:column; gap:3px;}
+  .crumb{ font-size:12px; color:var(--muted); display:flex; align-items:center; gap:7px;}
+  .kladde{ background:var(--kladde-bg); color:var(--kladde-ink); font-size:11px; font-weight:600; padding:2px 9px; border-radius:var(--radius-pill);}
+  .title{ font-size:23px; font-weight:700; letter-spacing:-.02em; display:flex; align-items:center; gap:9px;}
+  .title .pen{ color:var(--faint); font-size:15px;}
+  .appbar-right{ margin-left:auto; display:flex; align-items:center; gap:12px;}
+  .saved{ font-size:12.5px; color:var(--muted);}
+  .btn{ border:none; cursor:pointer; font-size:13.5px; font-weight:600; border-radius:var(--radius-pill); padding:9px 18px; font-family:inherit;}
+  .btn-ghost{ background:none; border:1.5px solid var(--line-strong); color:var(--muted);}
+  .btn-primary{ background:var(--indigo); color:#fff;}
+  .icon-btn{ width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line-strong);background:none;color:var(--muted);cursor:pointer;font-size:15px;}
+  .tabs{ background:var(--paper); padding:0 26px; display:flex; gap:26px; border-bottom:1px solid var(--line);}
+  .tabs .t{ padding:14px 0 13px; font-size:14px; color:var(--muted); cursor:pointer; font-weight:500; border-bottom:2.5px solid transparent; margin-bottom:-1px;}
+  .tabs .t.active{ color:var(--ink); font-weight:600;}
+  .tabs .t .pill{ background:var(--indigo); color:#fff; padding:5px 13px; border-radius:var(--radius-sm);}
+  .tabs .t.active.pillmode{ padding:11px 0;}
+  .body{ display:flex;}
+  .sidebar{ width:262px; flex-shrink:0; padding:24px 18px; border-right:1px solid var(--line); background:var(--paper); min-height:600px;}
+  .side-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  .side-head h3{ font-size:17px; font-weight:700;}
+  .side-add{ width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line-strong);background:none;color:var(--ink);cursor:pointer;font-size:16px;}
+  .nav-item{ display:flex; align-items:flex-start; gap:11px; padding:9px 8px; border-radius:var(--radius-sm); cursor:pointer;}
+  .nav-item:hover{ background:var(--cream);}
+  .nav-num{ min-width:34px; height:24px; padding:0 8px; border-radius:7px; background:#E7E4F3; color:var(--accent); font-size:11.5px; font-weight:700; letter-spacing:.02em; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .nav-item.active .nav-num{ background:var(--indigo); color:#fff;}
+  .nav-item.active .nav-label{ font-weight:600;}
+  .nav-label{ font-size:13.5px; line-height:1.3; padding-top:3px;}
+  .nav-sub{ font-size:11.5px; color:var(--muted); margin-top:1px;}
+  .side-foot{ margin-top:24px; border:1.5px solid var(--line-strong); border-radius:var(--radius-sm); padding:9px 14px; font-size:13px; color:var(--muted); display:flex; align-items:center; justify-content:space-between; cursor:pointer;}
+  .main{ flex:1; padding:26px 30px;}
+  .main h1{ font-size:25px; font-weight:700; letter-spacing:-.02em; margin-bottom:6px;}
+  .main .lede{ font-size:14px; color:var(--muted); margin-bottom:22px;}
+  .mod{ background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); margin-bottom:18px; overflow:hidden;}
+  .mod-head{ display:flex; align-items:flex-start; padding:18px 20px 14px; gap:14px;}
+  .mod-num{ min-width:40px; height:28px; padding:0 10px; border-radius:8px; background:#EFEDF7; color:var(--accent); font-size:12.5px; font-weight:700; letter-spacing:.02em; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;}
+  .mod-titles{ flex:1;}
+  .mod-title{ font-size:17px; font-weight:600;}
+  .mod-meta{ font-size:12px; color:var(--muted); margin-top:4px;}
+  .mod-meta strong{ color:var(--ink); font-weight:600;}
+  .mod-actions{ display:flex; align-items:center; gap:7px;}
+  .mini{ width:38px;height:38px;border-radius:50%;border:1px solid var(--line-strong);background:none;color:var(--ink);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;}
+  .mini svg{ display:block;}
+  .mini.rediger{ width:auto; border-radius:var(--radius-pill); padding:0 20px; font-size:14px; font-weight:600; height:38px;}
+  .mini:hover{ border-color:var(--ink); background:var(--cream);}
+  .mod-body{ background:var(--paper); margin:0 14px 14px; border:1px solid var(--line); border-radius:var(--radius-md); padding:16px 18px 18px;}
+  .cfg-header{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid var(--line);}
+  .cfg-title{ font-size:16px; font-weight:700; letter-spacing:-.01em; color:var(--ink);}
+  .toggle-group{ display:flex; gap:20px; flex-wrap:wrap; justify-content:flex-end; align-items:center;}
+  .cswitch{ display:inline-flex; align-items:center; gap:9px; cursor:pointer; user-select:none;}
+  .cswitch-label{ font-size:12.5px; font-weight:500; color:var(--muted); white-space:nowrap;}
+  .cswitch.on .cswitch-label{ color:var(--ink); font-weight:600;}
+  .switch{ width:38px;height:22px;border-radius:var(--radius-pill);background:#CFCAD8;position:relative;transition:background .18s;flex-shrink:0;}
+  .switch::after{ content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .18s;box-shadow:0 1px 2px rgba(0,0,0,.2);}
+  .toggle-wrap.on .switch, .cswitch.on .switch{ background:var(--indigo);}
+  .toggle-wrap.on .switch::after, .cswitch.on .switch::after{ left:18px;}
+  .logic-label{ font-size:12.5px; color:var(--muted); margin-bottom:7px;}
+  /* white section boxes */
+  .section{ background:none; border:none; border-radius:0; padding:0; margin-top:0;}
+  .section + .section{ margin-top:20px; padding-top:20px; border-top:1px solid var(--line);}
+  .section-head{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .section-title{ font-size:12.5px; font-weight:700; color:var(--muted); letter-spacing:.04em; text-transform:uppercase;}
+  .section-hint{ font-size:12.5px; color:var(--muted);}
+  /* frequency panel */
+  .freq-controls{ display:flex; align-items:flex-end; gap:16px; flex-wrap:nowrap;}
+  .seg{ display:inline-flex; background:var(--paper); border:1px solid var(--line-strong); border-radius:var(--radius-sm); padding:4px; flex-shrink:0;}
+  .seg-opt{ font-family:inherit; font-size:13.5px; font-weight:600; border:none; background:none; color:var(--muted); padding:9px 16px; border-radius:6px; cursor:pointer;}
+  .seg-opt.active{ background:var(--indigo); color:#fff;}
+  .freq-field{ display:flex; flex-direction:column; gap:6px; flex:1; min-width:0;}
+  .freq-flabel{ font-size:13px; color:var(--ink); font-weight:500;}
+  .freq-input{ display:flex; align-items:center; gap:8px; background:var(--paper); border:1px solid var(--line-strong); border-radius:var(--radius-sm); padding:0 12px; min-width:0;}
+  .freq-input input{ font-family:inherit; font-size:14px; color:var(--ink); border:none; outline:none; background:none; padding:11px 0; flex:1; width:100%;}
+  .freq-input input[type=number]::-webkit-inner-spin-button,.freq-input input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0;}
+  .freq-input input[type=number]{ -moz-appearance:textfield;}
+  .freq-input input::placeholder{ color:var(--faint);}
+  .freq-suffix{ font-size:13px; color:var(--muted); flex-shrink:0;}
+  .freq-guide{ margin-top:16px; background:#EDEBFB; border:1px solid #CFC9F2; border-radius:var(--radius-md); padding:14px 16px;}
+  .freq-guide-title{ font-size:14px; font-weight:700; color:#4A3D9E; margin-bottom:5px;}
+  .freq-guide p{ font-size:12.5px; color:#4A4670; line-height:1.55;}
+  .freq-guide strong{ color:#3A2F8C; font-weight:700;}
+  .logic-field{ background:none; border:none; border-radius:0; padding:0; display:flex; align-items:center; gap:14px;}
+  .logic-summary{ flex:1; min-width:0; font-size:14px; color:var(--ink); line-height:1.5; overflow-wrap:break-word;}
+  .logic-summary .kw{ font-weight:700;}
+  .logic-summary .ph{ color:var(--faint); font-style:italic;}
+  .logic-edit{ flex-shrink:0; font-family:inherit; font-size:13px; font-weight:600; border-radius:var(--radius-pill); padding:8px 16px; cursor:pointer; border:1.5px solid var(--line-strong); background:none; color:var(--muted);}
+  .logic-edit:hover{ border-color:var(--accent); color:var(--accent);}
+  .rule{ background:none; border:none; border-radius:0; padding:0; margin-top:0;}
+  .rule-head{ display:flex; align-items:flex-start; justify-content:space-between; padding-bottom:16px; border-bottom:1px solid var(--line);}
+  .rule-eyebrow{ display:none;}
+  /* ---- modal ---- */
+  .modal-scrim{ position:fixed; inset:0; background:rgba(20,20,40,.42); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px; animation:fade .14s ease;}
+  @keyframes fade{ from{opacity:0;} to{opacity:1;} }
+  .modal{ background:var(--paper); border-radius:var(--radius-lg); width:100%; max-width:440px; padding:24px 24px 22px; box-shadow:0 30px 80px rgba(20,20,40,.4); animation:pop .16s ease;}
+  .modal.wide{ max-width:600px;}
+  @keyframes pop{ from{opacity:0; transform:translateY(8px) scale(.98);} to{opacity:1; transform:none;} }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between;}
+  .modal-head h3{ font-size:18px; font-weight:700;}
+  .modal-x{ width:32px;height:32px;border-radius:50%;border:none;background:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;}
+  .modal-x:hover{ background:var(--cream); color:var(--ink);}
+  .modal-sub{ font-size:13px; color:var(--muted); margin:4px 0 18px;}
+  .modal-opts{ display:flex; flex-direction:column; gap:10px;}
+  .modal-opt{ display:flex; align-items:center; gap:14px; text-align:left; background:none; border:1.5px solid var(--line); border-radius:var(--radius-md); padding:14px 16px; cursor:pointer; font-family:inherit;}
+  .modal-opt:hover{ border-color:var(--og-ink); background:var(--og-bg);}
+  .modal-opt-text{ display:flex; flex-direction:column; gap:2px; flex:1;}
+  .modal-opt-title{ font-size:14.5px; font-weight:600; color:var(--ink);}
+  .modal-opt-desc{ font-size:12.5px; color:var(--muted); line-height:1.35;}
+  .modal-opt-chev{ color:var(--faint); font-size:18px; flex-shrink:0;}
+  /* eyebrow tag in modal header */
+  .eyebrow{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.06em; padding:5px 11px; border-radius:var(--radius-sm); margin-bottom:9px;}
+  .eyebrow .eb-ic{ font-size:11px;}
+  .eyebrow.hvis{ background:var(--hvis-bg); color:var(--hvis-ink);}
+  .eyebrow.og{ background:var(--og-bg); color:var(--og-ink);}
+  .modal-head{ align-items:flex-start;}
+  /* variable picker cards */
+  .pick-list{ display:flex; flex-direction:column; gap:10px; max-height:52vh; overflow-y:auto; margin:2px 0 4px; padding:2px;}
+  .pick-card{ display:flex; align-items:center; gap:16px; text-align:left; background:none; border:1.5px solid var(--line); border-radius:var(--radius-md); padding:14px 18px; cursor:pointer; font-family:inherit; transition:border-color .14s, background .14s;}
+  .pick-card:hover{ border-color:var(--accent);}
+  .pick-card.selected{ border-color:var(--accent); background:#FAF8FE;}
+  .pick-badge{ width:46px; height:38px; border-radius:var(--radius-sm); background:var(--cream); color:var(--slot-ink); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; flex-shrink:0;}
+  .pick-card.selected .pick-badge{ background:var(--accent-soft, #ECECFB); color:var(--accent);}
+  .pick-text{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;}
+  .pick-title{ font-size:15px; font-weight:600; color:var(--ink);}
+  .pick-sub{ font-size:12.5px; color:var(--muted);}
+  .pick-radio{ width:20px; height:20px; border-radius:50%; border:2px solid var(--line-strong); flex-shrink:0; position:relative; transition:border-color .14s;}
+  .pick-card.selected .pick-radio{ border-color:var(--accent);}
+  .pick-card.selected .pick-radio::after{ content:""; position:absolute; inset:3px; border-radius:50%; background:var(--accent);}
+  /* operator grid */
+  .pick-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:2px 0 4px;}
+  .grid-card{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:none; border:1.5px solid var(--line); border-radius:var(--radius-md); padding:22px 10px; cursor:pointer; font-family:inherit; transition:border-color .14s, background .14s;}
+  .grid-card:hover{ border-color:var(--accent);}
+  .grid-card.selected{ border-color:var(--accent); background:#FAF8FE;}
+  .grid-sym{ font-size:24px; font-weight:600; color:var(--ink); line-height:1;}
+  .grid-label{ font-size:13px; color:var(--muted);}
+  .grid-card.selected .grid-label{ color:var(--accent); font-weight:600;}
+  @media (max-width:480px){ .pick-grid{ grid-template-columns:repeat(2,1fr);} }
+  .modal-foot{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; padding-top:16px; border-top:1px solid var(--line);}
+  .btn.is-disabled{ opacity:.4; cursor:not-allowed;}
+  /* clickable variable slot in builder */
+  .pslot{ font-family:inherit; font-size:14.5px; font-weight:500; color:var(--slot-ink); background:var(--paper); border:1.5px dashed var(--slot-line); border-radius:var(--radius-sm); padding:9px 14px; cursor:pointer; transition:border-color .14s, color .14s;}
+  .pslot:hover{ border-color:var(--slot-ink);}
+  .pslot.empty{ color:var(--slot-empty);}
+  .pslot:focus{ outline:none; border-color:var(--accent); border-style:solid; box-shadow:0 0 0 3px rgba(61,61,176,.12);}
+  .clause{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:14px 0; border-bottom:1px dashed var(--line);}
+  .clause:last-of-type{ border-bottom:none;}
+  .ctag{ display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:14px; padding:9px 15px; border-radius:var(--radius-md); flex-shrink:0; min-width:74px;}
+  .ctag .ic{ font-size:14px; line-height:1;}
+  .ctag.hvis{ background:var(--hvis-bg); color:var(--hvis-ink);}
+  .ctag.og{ background:var(--og-bg); color:var(--og-ink);}
+  .ctag.saa{ background:var(--saa-bg); color:var(--saa-ink);}
+  .word{ font-size:15px; color:var(--ink);}
+  .slot{ display:inline-flex; align-items:center; position:relative;}
+  .slot select, .slot input{ appearance:none; -webkit-appearance:none; font-family:inherit; font-size:14.5px; color:var(--slot-ink);
+    background:var(--paper); border:1.5px dashed var(--slot-line); border-radius:var(--radius-sm); padding:9px 28px 9px 14px; cursor:pointer; outline:none; font-weight:500; min-width:60px;}
+  .slot input{ padding-right:14px; width:108px; cursor:text;}
+  .slot input[type=number]::-webkit-inner-spin-button, .slot input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0;}
+  .slot input[type=number]{ -moz-appearance:textfield; appearance:textfield;}
+  .slot.num input{ width:96px;}
+  .slot::after{ content:"▾"; position:absolute; right:13px; top:50%; transform:translateY(-50%); color:var(--slot-empty); font-size:11px; pointer-events:none;}
+  .slot.input-slot::after{ display:none;}
+  .slot select:focus, .slot input:focus{ border-color:var(--accent); border-style:solid; box-shadow:0 0 0 3px rgba(61,61,176,.12);}
+  .slot select.empty{ color:var(--slot-empty);}
+  .slot:hover select, .slot:hover input{ border-color:var(--slot-ink);}
+  .skift{ margin-left:auto;}
+  .skift-btn{ font-family:inherit; font-size:13px; font-weight:600; border-radius:var(--radius-pill); padding:9px 17px; cursor:pointer; border:1.5px solid var(--line-strong); background:none; color:var(--muted);}
+  .skift-btn:hover{ border-color:var(--accent); color:var(--accent);}
+  .clause-x{ width:30px;height:30px;border-radius:50%;border:1.5px solid transparent;background:none;color:var(--faint);cursor:pointer;font-size:16px;margin-left:auto;flex-shrink:0;}
+  .clause-x:hover{ color:#C0392B;}
+  .saa-locked{ font-size:14.5px; color:var(--ink); font-weight:500; background:var(--paper); border:1.5px solid var(--line-strong); border-radius:var(--radius-sm); padding:9px 14px;}
+  .first-note{ font-size:12.5px; color:var(--muted); line-height:1.55; background:var(--cream); border:1px solid var(--line); border-radius:var(--radius-sm); padding:12px 14px; margin-top:4px;}
+  .add-row{ display:flex; gap:14px; margin-top:18px; flex-wrap:wrap;}
+  .add-btn{ display:inline-flex; align-items:center; gap:9px; background:none; border:1.5px dashed var(--slot-line); border-radius:var(--radius-pill); padding:6px 18px 6px 7px; font-family:inherit; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer;}
+  .add-btn .circ{ width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0;}
+  .add-btn.og .circ{ background:var(--og-ink);}
+  .add-btn.saa .circ{ background:var(--saa-ink);}
+  .add-btn.hvis .circ{ background:var(--hvis-ink);}
+  .add-btn.hvis:hover{ border-color:var(--hvis-ink); background:var(--hvis-bg);}
+  /* collapsed empty prompt */
+  .logic-empty{ display:flex; align-items:center; gap:14px; background:var(--paper); border:1.5px dashed var(--line-strong); border-radius:var(--radius-md); padding:14px 16px; cursor:pointer; transition:border-color .16s, background .16s;}
+  .logic-empty:hover{ border-color:var(--accent); background:#FAF8FE;}
+  .le-spark{ width:38px; height:38px; border-radius:50%; background:var(--hvis-bg); color:var(--hvis-ink); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;}
+  .le-text{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;}
+  .le-title{ font-size:14px; font-weight:600; color:var(--ink);}
+  .le-sub{ font-size:12.5px; color:var(--muted);}
+  .le-cta{ display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:700; color:#1E3A8A; flex-shrink:0;}
+  .le-arrow{ transition:transform .16s;}
+  .logic-empty:hover .le-arrow{ transform:translateX(3px);}
+  /* opened, no trigger yet — compact centered */
+  .rule-emptystate{ display:flex; flex-direction:column; align-items:center; text-align:center; padding:18px 20px 10px; gap:4px;}
+  .es-icon{ width:46px; height:46px; border-radius:50%; background:var(--hvis-bg); display:flex; align-items:center; justify-content:center; font-size:19px; color:var(--hvis-ink); margin-bottom:6px;}
+  .es-text{ font-size:14px; color:var(--muted); line-height:1.5; max-width:340px; margin-bottom:12px;}
+  .es-btn{ display:inline-flex; align-items:center; gap:9px; background:var(--indigo); color:#fff; border:none; border-radius:var(--radius-pill); padding:11px 22px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;}
+  .es-btn:hover{ background:var(--accent);}
+  .es-plus{ font-size:17px; line-height:1;}
+  .es-cancel{ margin-top:10px; background:none; border:none; color:var(--muted); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; padding:4px 8px;}
+  .es-cancel:hover{ color:var(--ink); text-decoration:underline;}
+  .add-btn.og:hover{ border-color:var(--og-ink); background:var(--og-bg);}
+  .add-btn:disabled{ opacity:.42; cursor:not-allowed;}
+  .add-btn:disabled:hover{ border-color:var(--slot-line); background:none;}
+  .rule-foot{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line);}
+  /* snackbar */
+  #snackbar-root{ position:fixed; left:0; right:0; bottom:24px; display:flex; justify-content:center; z-index:200; pointer-events:none;}
+  .snackbar{ pointer-events:auto; background:var(--indigo); color:#fff; border-radius:var(--radius-md); box-shadow:0 12px 40px rgba(20,20,40,.35); max-width:520px; width:calc(100% - 40px); padding:14px 16px; animation:snackup .2s ease;}
+  @keyframes snackup{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;} }
+  .snackbar.err{ background:#5A1F1F;}
+  .snackbar.ok{ background:#1E4D2B;}
+  .snack-row{ display:flex; align-items:center; gap:12px;}
+  .snack-icon{ width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;}
+  .snack-msg{ flex:1; font-size:13.5px; font-weight:500;}
+  .snack-link{ background:none; border:none; color:#fff; font-family:inherit; font-size:13px; font-weight:700; text-decoration:underline; cursor:pointer; flex-shrink:0;}
+  .snack-x{ background:none; border:none; color:rgba(255,255,255,.8); font-size:18px; cursor:pointer; flex-shrink:0; line-height:1;}
+  .snack-x:hover{ color:#fff;}
+  .snack-list{ margin:12px 0 2px; padding-left:18px; display:flex; flex-direction:column; gap:6px;}
+  .snack-list li{ font-size:12.5px; line-height:1.45; color:rgba(255,255,255,.92);}
+  @media (max-width:760px){ .sidebar{display:none;} .appbar-right .saved{display:none;} .tabs{overflow-x:auto;} .skift{ margin-left:0; width:100%;} }
+</style>
+</head>
+<body>
+<div class="browser">
+  <div class="chrome">
+    <div class="chrome-top">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <div class="tab"><span class="fav"></span>AppNavn<span class="x">×</span></div>
+    </div>
+    <div class="addr">
+      <div class="nav"><span>←</span><span>→</span><span>⟳</span><span>⌂</span></div>
+      <div class="urlbar"><span>🔒</span>www.AppNavn.dk/redaktør</div>
+    </div>
+  </div>
+  <div class="appbar">
+    <button class="back">←</button>
+    <div class="title-wrap">
+      <div class="crumb">Modulpakke <span>•</span> <span class="kladde">Kladde</span></div>
+      <div class="title">Behandling af angst <span class="pen">✎</span></div>
+    </div>
+    <div class="appbar-right">
+      <span class="saved">Gemt i dag 09:34</span>
+      <button class="btn btn-ghost" data-act="gem">Gem</button>
+      <button class="btn btn-primary">Publicér</button>
+      <button class="icon-btn">⋯</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="t active pillmode"><span class="pill">Indhold</span></div>
+    <div class="t">Opsætning</div><div class="t">Valgfrie moduler</div><div class="t">Tillægsmoduler</div><div class="t">Regler</div>
+  </div>
+  <div class="body">
+    <aside class="sidebar">
+      <div class="side-head"><h3>Overblik</h3><button class="side-add">+</button></div>
+      <div class="nav-item"><div class="nav-num">M7K</div><div class="nav-label">Hvad er angst</div></div>
+      <div class="nav-item"><div class="nav-num">M2X</div><div class="nav-label">Hvad er tankemylder</div></div>
+      <div class="nav-item active"><div class="nav-num">M9F</div><div><div class="nav-label">Øvelser til afhjælpning af angst</div><div class="nav-sub">Modulpakke · 8 moduler</div></div></div>
+      <div class="nav-item"><div class="nav-num">M4B</div><div class="nav-label">Øvelser til angst</div></div>
+      <div class="side-foot">Skjul menu <span>⇤</span></div>
+    </aside>
+    <main class="main">
+      <h1>Indhold og afviklingsplan</h1>
+      <p class="lede">Forløbets startdato vælges af behandler ved tilknytning til en borger.</p>
+      <div id="modules"></div>
+    </main>
+  </div>
+</div>
+<div id="modal-root"></div>
+<div id="snackbar-root"></div>
+<script>
+// Modules selectable as variables (title, subtitle)
+const MODULE_IDS = { 1:"M7K", 2:"M2X", 3:"M9F", 4:"M4B", 5:"M6Q", 6:"M3D" };
+const MODULE_OPTIONS = [
+  { val:1, title:"Intro til forløbet",        sub:"Velkomstmodul" },
+  { val:2, title:"Registrering af humør",     sub:"Dagligt spørgeskema" },
+  { val:3, title:"Symptomscore (PHQ-9)",      sub:"Validering hver uge" },
+  { val:4, title:"Forstå din angst",          sub:"Psykoedukation" },
+  { val:5, title:"Vejrtrækningsøvelse",       sub:"Lydguidet øvelse" },
+  { val:6, title:"Ugentlig refleksion",       sub:"Fritekst og selvvurdering" },
+];
+const MODULE_TITLE = id => MODULE_OPTIONS.find(o=>o.val===id).title;
+const MODULE_SUB   = id => MODULE_OPTIONS.find(o=>o.val===id).sub;
+const CALC_OPTIONS = [
+  { val:"A", badge:"A", title:"PHQ-9 sumscore",     sub:"Samlet symptomscore" },
+  { val:"B", badge:"B", title:"Humør-gennemsnit",   sub:"Sidste 7 dage" },
+  { val:"C", badge:"C", title:"Gennemførselsgrad",  sub:"Andel afsluttede moduler" },
+];
+const OP_OPTIONS = [
+  { val:"lig med",        sym:"=",  title:"lig med" },
+  { val:"forskellig fra", sym:"≠",  title:"forskellig fra" },
+  { val:"større end",     sym:"›",  title:"større end" },
+  { val:"mindre end",     sym:"‹",  title:"mindre end" },
+  { val:"større/lig",     sym:"≥",  title:"større/lig" },
+  { val:"mindre/lig",     sym:"≤",  title:"mindre/lig" },
+];
+
+let modules = [
+  { id:1, toggle:false, repeat:false, freqMode:"antal", freqCount:"", freqDays:"", trigger:{type:"startdato"}, conds:[], saa:true },
+  { id:2, toggle:false, repeat:false, freqMode:"antal", freqCount:"", freqDays:"", trigger:null, conds:[], saa:false },
+  { id:3, toggle:false, repeat:false, freqMode:"antal", freqCount:"", freqDays:"", trigger:null, conds:[], saa:false },
+  { id:4, toggle:false, repeat:false, freqMode:"antal", freqCount:"", freqDays:"", trigger:null, conds:[], saa:false },
+  { id:5, toggle:false, repeat:false, freqMode:"antal", freqCount:"", freqDays:"", trigger:null, conds:[], saa:false },
+  { id:6, toggle:false, repeat:false, freqMode:"antal", freqCount:"", freqDays:"", trigger:null, conds:[], saa:false },
+];
+// display order (list of module ids). Position 0 = first module in forløbet.
+let order = [1,2,3,4,5,6];
+const isFirst = id => order[0]===id;
+const posOf = id => order.indexOf(id)+1; // 1-based display position
+
+function applyFirstRules(){
+  // The module currently in position 0 is auto-triggered by forløbsstart, no conditions.
+  order.forEach((mid, pos)=>{
+    const m = modOf(mid);
+    if(pos===0){
+      m.trigger = {type:"startdato"};
+      m.conds = [];
+      m.saa = true;
+    }
+  });
+}
+
+function moveModule(id, dir){
+  const i = order.indexOf(id);
+  const j = i + dir;
+  if(j<0 || j>=order.length) return;
+  const wasFirst = i===0;
+  const willBeFirst = j===0;
+  // swap
+  [order[i], order[j]] = [order[j], order[i]];
+  // a module leaving position 0 gets its trigger reset (editor tilpasser bagefter)
+  if(wasFirst){
+    const m = modOf(id);
+    m.trigger = null; m.conds = []; m.saa = false;
+  }
+  // ensure whoever is now first follows first-module rules
+  applyFirstRules();
+  if(openEditor===id && !willBeFirst && !modOf(id).trigger){ /* keep editor open on empty */ }
+  render();
+}
+let openEditor = null;
+let modal = null; // { id, kind:"trigger"|"cond" }
+
+/* ---------- collapsed single-line summary ---------- */
+function triggerSummary(t){
+  const mid = t.modul ? posOf(t.modul) : "…";
+  switch(t.type){
+    case "startdato":      return `forløbet starter`;
+    case "modul_indsendt": return `modul ${mid} er indsendt`;
+    case "modul_tilgaeng": return `modul ${mid} er gjort tilgængeligt for borger`;
+  }
+}
+function condSummary(c){
+  switch(c.type){
+    case "feedback":       return `der er givet feedback fra behandler`;
+    case "tid_tilgaeng":   return `der er gået ${c.dage!==""&&c.dage!=null?c.dage:"…"} dage efter modulet blev gjort tilgængeligt`;
+    case "tid_start":      return `der er gået ${c.dage!==""&&c.dage!=null?c.dage:"…"} dage efter forløbets start`;
+    case "beregning":      return `beregning ${c.calc||"…"} ${c.op||"…"} ${c.val!==""&&c.val!=null?c.val:"…"}`;
+  }
+}
+function summaryHTML(m){
+  if(!m.trigger) return `<span class="ph">Der er ikke opsat afviklingslogik for dette modul</span>`;
+  let s = `<span class="kw">NÅR</span> ${triggerSummary(m.trigger)}`;
+  m.conds.forEach(c => s += ` <span class="kw">og</span> ${condSummary(c)}`);
+  if(m.saa) s += ` <span class="kw">så</span> gør modulet tilgængeligt for borger`;
+  return s;
+}
+
+/* ---------- builder controls ---------- */
+function moduleSlotLabel(val){
+  const o = MODULE_OPTIONS.find(x=>x.val===+val);
+  return o ? o.title : "Vælg modul";
+}
+function triggerControls(m){
+  const t = m.trigger;
+  if(t.type==="startdato") return `<span class="word">forløbet starter</span>`;
+  const verb = t.type==="modul_indsendt" ? "er indsendt" : "er gjort tilgængeligt for borger";
+  return `<button class="pslot ${t.modul?"":"empty"}" data-act="pick-open" data-id="${m.id}" data-kind="modul">${moduleSlotLabel(t.modul)}</button>
+    <span class="word">${verb}</span>`;
+}
+function calcSlotLabel(v){ const o=CALC_OPTIONS.find(x=>x.val===v); return o?o.title:"Vælg beregning"; }
+function opSlotLabel(v){ const o=OP_OPTIONS.find(x=>x.val===v); return o?o.title:"Vælg operator"; }
+function condControls(c, mid, idx){
+  if(c.type==="feedback") return `<span class="word">der er givet feedback fra behandler</span>`;
+  if(c.type==="tid_tilgaeng") return `<span class="word">der er gået</span>
+    <span class="slot num input-slot"><input type="number" min="0" placeholder="Antal dage" value="${c.dage??""}" data-act="cond-dage" data-id="${mid}" data-idx="${idx}"></span>
+    <span class="word">dage efter modulet blev gjort tilgængeligt</span>`;
+  if(c.type==="tid_start") return `<span class="word">der er gået</span>
+    <span class="slot num input-slot"><input type="number" min="0" placeholder="Antal dage" value="${c.dage??""}" data-act="cond-dage" data-id="${mid}" data-idx="${idx}"></span>
+    <span class="word">dage efter forløbets start</span>`;
+  return `<span class="word">beregning</span>
+    <button class="pslot ${c.calc?"":"empty"}" data-act="pick-open" data-id="${mid}" data-idx="${idx}" data-kind="calc">${calcSlotLabel(c.calc)}</button>
+    <span class="word">er</span>
+    <button class="pslot ${c.op?"":"empty"}" data-act="pick-open" data-id="${mid}" data-idx="${idx}" data-kind="op">${opSlotLabel(c.op)}</button>
+    <span class="slot num input-slot"><input type="number" placeholder="Værdi" value="${c.val!==""&&c.val!=null?c.val:""}" data-act="cond-val" data-id="${mid}" data-idx="${idx}"></span>`;
+}
+
+function builderHTML(m){
+  const first = isFirst(m.id);
+  const hvisRow = m.trigger ? `
+    <div class="clause">
+      <span class="ctag hvis"><span class="ic">⚡</span>NÅR</span>
+      ${triggerControls(m)}
+      ${first?"":`<span class="skift"><button class="skift-btn" data-act="trigger-add" data-id="${m.id}">Skift trigger</button></span>`}
+    </div>` : "";
+
+  const condRows = m.conds.map((c,i)=>`
+    <div class="clause">
+      <span class="ctag og"><span class="ic">⧩</span>OG</span>
+      ${condControls(c,m.id,i)}
+      <button class="clause-x" data-act="cond-remove" data-id="${m.id}" data-idx="${i}" title="Fjern betingelse">×</button>
+    </div>`).join("");
+
+  const saaRow = m.saa ? `
+    <div class="clause">
+      <span class="ctag saa"><span class="ic">→</span>SÅ</span>
+      <span class="word">udfør</span>
+      <span class="saa-locked">Gør modulet tilgængeligt for borger</span>
+    </div>` : "";
+
+  let addButtons;
+  if(!m.trigger){
+    addButtons = `
+      <div class="rule-emptystate">
+        <div class="es-icon"><span>⚡</span></div>
+        <p class="es-text">Start med at vælge, hvornår modulet skal blive tilgængeligt for borgeren.</p>
+        <button class="es-btn" data-act="trigger-add" data-id="${m.id}"><span class="es-plus">+</span> Vælg trigger</button>
+        <button class="es-cancel" data-act="done" data-id="${m.id}">Annullér</button>
+      </div>`;
+  } else if(first){
+    // first module: trigger locked to forløbsstart, no OG conditions
+    addButtons = `<p class="first-note">Dette er forløbets første modul. Det udløses automatisk ved forløbets start og kan ikke have betingelser. Flyt modulet ned i rækkefølgen for at sætte en anden regel op.</p>`;
+  } else {
+    addButtons = `
+      <div class="add-row">
+        <button class="add-btn og" data-act="cond-add" data-id="${m.id}"><span class="circ">⧩</span> Tilføj OG (betingelse)</button>
+      </div>`;
+  }
+
+  const foot = m.trigger ? `
+      <div class="rule-foot">
+        ${first?"":`<button class="btn btn-ghost" data-act="reset" data-id="${m.id}">Nulstil regel</button>`}
+        <button class="btn btn-primary" data-act="done" data-id="${m.id}">Luk</button>
+      </div>` : "";
+
+  return `
+    <div class="rule">
+      ${hvisRow}
+      ${condRows}
+      ${saaRow}
+      ${addButtons}
+      ${foot}
+    </div>`;
+}
+
+/* ---------- modal (choose trigger OR OG type) ---------- */
+const TRIGGER_TYPES = [
+  { type:"startdato",      icon:"🚩", title:"Forløbet starter",                 desc:"Reglen udløses ved forløbets startdato." },
+  { type:"modul_indsendt", icon:"📤", title:"Et modul er indsendt",             desc:"Når borgeren har indsendt et bestemt modul." },
+  { type:"modul_tilgaeng", icon:"🔓", title:"Et modul er gjort tilgængeligt",   desc:"Når et bestemt modul er gjort tilgængeligt for borgeren." },
+];
+const COND_TYPES = [
+  { type:"feedback",     icon:"💬", title:"Feedback fra behandler",   desc:"Behandler har givet feedback på modulet." },
+  { type:"tid_tilgaeng", icon:"⏱", title:"Tid efter tilgængelig",     desc:"Et antal dage efter modulet blev gjort tilgængeligt." },
+  { type:"tid_start",    icon:"📅", title:"Tid efter forløbsstart",    desc:"Et antal dage efter forløbets startdato." },
+  { type:"beregning",    icon:"🧮", title:"Beregning opfylder krav",   desc:"En beregnet værdi opfylder en betingelse." },
+];
+function moduleListForPicker(){
+  // ordered by current sequence; badge = position number
+  return order.map((mid, i)=>{
+    const o = MODULE_OPTIONS.find(x=>x.val===mid);
+    return { val:mid, badge:String(i+1), title:o.title, sub:o.sub };
+  });
+}
+const PICK_META = {
+  modul: { tag:"NÅR · TRIGGER", tagClass:"hvis", heading:"Vælg modul",     sub:"Reglen aktiveres ud fra det valgte modul.", dynamic:moduleListForPicker },
+  calc:  { tag:"OG · BETINGELSE", tagClass:"og",  heading:"Vælg beregning", sub:"Vælg hvilken beregnet værdi betingelsen skal bruge.", list:CALC_OPTIONS },
+  op:    { tag:"OG · BETINGELSE", tagClass:"og",  heading:"Vælg operator",  sub:"Hvordan skal værdien sammenlignes?", list:OP_OPTIONS, layout:"grid" },
+};
+
+function typePickerHTML(){
+  const isTrigger = modal.kind==="trigger";
+  const list = isTrigger ? TRIGGER_TYPES : COND_TYPES;
+  const heading = isTrigger ? "Vælg trigger" : "Tilføj betingelse";
+  const sub = isTrigger ? "Vælg hvad der skal udløse reglen." : "Vælg hvilken type betingelse der skal opfyldes.";
+  const tag = isTrigger ? `<span class="eyebrow hvis"><span class="eb-ic">⚡</span>NÅR · TRIGGER</span>` : `<span class="eyebrow og"><span class="eb-ic">⧩</span>OG · BETINGELSE</span>`;
+  const pickAct = isTrigger ? "pick-trigger" : "pick-cond";
+  const options = list.map(o=>`
+    <button class="modal-opt" data-act="${pickAct}" data-id="${modal.id}" data-type="${o.type}">
+      <span class="modal-opt-text"><span class="modal-opt-title">${o.title}</span><span class="modal-opt-desc">${o.desc}</span></span>
+      <span class="modal-opt-chev">›</span>
+    </button>`).join("");
+  return `
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head"><div>${tag}<h3>${heading}</h3></div><button class="modal-x" data-act="modal-close">×</button></div>
+      <p class="modal-sub">${sub}</p>
+      <div class="modal-opts">${options}</div>
+    </div>`;
+}
+
+function variablePickerHTML(){
+  const meta = PICK_META[modal.pickKind];
+  const list = meta.dynamic ? meta.dynamic() : meta.list;
+  let body;
+  if(meta.layout==="grid"){
+    const cells = list.map(o=>`
+      <button class="grid-card ${String(modal.sel)===String(o.val)?"selected":""}" data-act="pick-sel" data-val="${o.val}">
+        <span class="grid-sym">${o.sym}</span>
+        <span class="grid-label">${o.title}</span>
+      </button>`).join("");
+    body = `<div class="pick-grid">${cells}</div>`;
+  } else {
+    const cards = list.map(o=>`
+      <button class="pick-card ${String(modal.sel)===String(o.val)?"selected":""}" data-act="pick-sel" data-val="${o.val}">
+        <span class="pick-badge">${o.badge}</span>
+        <span class="pick-text"><span class="pick-title">${o.title}</span><span class="pick-sub">${o.sub}</span></span>
+        <span class="pick-radio"></span>
+      </button>`).join("");
+    body = `<div class="pick-list">${cards}</div>`;
+  }
+  const canApply = modal.sel!=null && modal.sel!=="";
+  return `
+    <div class="modal ${meta.layout==="grid"?"wide":""}" role="dialog" aria-modal="true">
+      <div class="modal-head"><div><span class="eyebrow ${meta.tagClass}"><span class="eb-ic">${meta.tagClass==="hvis"?"⚡":"⧩"}</span>${meta.tag}</span><h3>${meta.heading}</h3></div><button class="modal-x" data-act="modal-close">×</button></div>
+      <p class="modal-sub">${meta.sub}</p>
+      ${body}
+      <div class="modal-foot">
+        <button class="btn btn-ghost" data-act="modal-close">Annullér</button>
+        <button class="btn btn-primary ${canApply?"":"is-disabled"}" data-act="pick-apply" ${canApply?"":"disabled"}>Anvend</button>
+      </div>
+    </div>`;
+}
+
+function modalHTML(){
+  if(!modal) return "";
+  const inner = modal.kind==="pick" ? variablePickerHTML() : typePickerHTML();
+  return `<div class="modal-scrim">${inner}</div>`;
+}
+function renderModal(){
+  document.getElementById("modal-root").innerHTML = modalHTML();
+}
+
+/* ---------- main render ---------- */
+function render(){
+  document.getElementById("modules").innerHTML = order.map((mid, pos)=>{
+    const m = modOf(mid);
+    const first = pos===0;
+    const isOpen = openEditor===m.id;
+    const field = isOpen ? builderHTML(m)
+      : (m.trigger
+          ? `<div class="logic-field"><div class="logic-summary">${summaryHTML(m)}</div>${first?"":`<button class="logic-edit" data-act="open" data-id="${m.id}">Rediger</button>`}</div>`
+          : `<div class="logic-empty" data-act="open" data-id="${m.id}">
+               <div class="le-spark">⚡</div>
+               <div class="le-text"><span class="le-title">Ingen afviklingslogik endnu</span></div>
+               <span class="le-cta">Opsæt regel <span class="le-arrow">→</span></span>
+             </div>`);
+    const freqPanel = m.repeat ? `
+      <div class="section">
+        <div class="section-head"><span class="section-title">Gentagelse af modul</span><span class="section-hint">Hvor ofte borgeren kan gennemføre modulet</span></div>
+        <div class="freq-controls">
+          <div class="seg">
+            <button class="seg-opt ${m.freqMode==="antal"?"active":""}" data-act="freq-mode" data-id="${m.id}" data-mode="antal">Antal gange</button>
+            <button class="seg-opt ${m.freqMode==="periode"?"active":""}" data-act="freq-mode" data-id="${m.id}" data-mode="periode">Periode</button>
+          </div>
+          <div class="freq-field">
+            ${m.freqMode==="antal"
+              ? `<label class="freq-flabel">Antal gange</label>
+                 <div class="freq-input"><input type="number" min="1" placeholder="fx 3" value="${m.freqCount}" data-act="freq-count" data-id="${m.id}"><span class="freq-suffix">gange</span></div>`
+              : `<label class="freq-flabel">Periode</label>
+                 <div class="freq-input"><input type="number" min="1" placeholder="fx 14" value="${m.freqDays}" data-act="freq-days" data-id="${m.id}"><span class="freq-suffix">dage</span></div>`}
+          </div>
+        </div>
+        <div class="freq-guide">
+          <div class="freq-guide-title">${m.freqMode==="antal" ? "Sådan virker Antal gange" : "Sådan virker Periode"}</div>
+          <p>${m.freqMode==="antal"
+               ? "Borgeren kan gennemføre modulet et fast antal gange. Når antallet er nået, lukkes modulet."
+               : "Borgeren kan gennemføre modulet dagligt i det angivne antal dage. Der vises ét kort pr. dag — gennemførsler akkumuleres ikke, og eventuelle regler nedenunder afvikles kun på første gennemførsel."}</p>
+        </div>
+      </div>` : "";
+    return `
+      <div class="mod">
+        <div class="mod-head">
+          <div class="mod-num">${pos+1}</div>
+          <div class="mod-titles"><div class="mod-title">${MODULE_TITLE(m.id)}</div><div class="mod-meta">${MODULE_SUB(m.id)} · Sidst ændret <strong>i dag, 09:34</strong></div></div>
+          <div class="mod-actions">
+            <button class="mini rediger" data-act="open" data-id="${m.id}">Rediger</button>
+            <button class="mini" data-act="move-up" data-id="${m.id}" ${first?"disabled":""} title="Flyt op"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"></polyline></svg></button>
+            <button class="mini" data-act="move-down" data-id="${m.id}" ${pos===order.length-1?"disabled":""} title="Flyt ned"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+            <button class="mini" title="Info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="11" x2="12" y2="16"></line><circle cx="12" cy="8" r="0.6" fill="currentColor" stroke="none"></circle></svg></button>
+            <button class="mini" title="Flere handlinger"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="18" cy="12" r="1.6"></circle></svg></button>
+          </div>
+        </div>
+        <div class="mod-body">
+          <div class="cfg-header">
+            <h3 class="cfg-title">Konfiguration af modul</h3>
+            <div class="toggle-group">
+              <label class="cswitch ${m.repeat?"on":""}" data-act="repeat-toggle" data-id="${m.id}" title="Borger skal udføre modulet flere gange">
+                <span class="cswitch-label">Gentag modul</span><span class="switch"></span>
+              </label>
+              <label class="cswitch ${m.toggle?"on":""}" data-act="toggle" data-id="${m.id}" title="Marker først som gennemført efter feedback">
+                <span class="cswitch-label">Feedback før gennemført</span><span class="switch"></span>
+              </label>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-head"><span class="section-title">Afviklingslogik</span>${first?`<span class="section-hint">Første modul udløses automatisk ved forløbets start</span>`:""}</div>
+            ${field}
+          </div>
+          ${freqPanel}
+        </div>
+      </div>`;
+  }).join("");
+  renderModal();
+}
+
+const modOf  = id => modules.find(m=>m.id===id);
+const condOf = (id,i) => modOf(id).conds[i];
+
+function newCond(type){
+  if(type==="tid_tilgaeng") return {type:"tid_tilgaeng", dage:""};
+  if(type==="tid_start")    return {type:"tid_start", dage:""};
+  if(type==="beregning")    return {type:"beregning", calc:"", op:"", val:""};
+  return {type:"feedback"};
+}
+function newTrigger(type){
+  if(type==="startdato")      return {type:"startdato"};
+  if(type==="modul_indsendt") return {type:"modul_indsendt", modul:""};
+  return {type:"modul_tilgaeng", modul:""};
+}
+
+document.addEventListener("click", e=>{
+  // scrim closes only when the backdrop itself is clicked
+  if(e.target.classList && e.target.classList.contains("modal-scrim")){ modal=null; renderModal(); return; }
+  const el = e.target.closest("[data-act]"); if(!el) return;
+  const act = el.dataset.act, id = el.dataset.id!==undefined ? +el.dataset.id : null;
+  const idx = el.dataset.idx!==undefined ? +el.dataset.idx : null;
+  switch(act){
+    case "toggle":         modOf(id).toggle = !modOf(id).toggle; render(); break;
+    case "repeat-toggle":  modOf(id).repeat = !modOf(id).repeat; render(); break;
+    case "freq-mode":      modOf(id).freqMode = el.dataset.mode; render(); break;
+    case "move-up":        moveModule(id, -1); break;
+    case "move-down":      moveModule(id, +1); break;
+    case "open":           openEditor = id; render(); break;
+    case "done":           openEditor = null; render(); break;
+    case "trigger-add":    modal = {id, kind:"trigger"}; renderModal(); break;
+    case "trigger-remove": modOf(id).trigger = null; render(); break;
+    case "cond-add":       modal = {id, kind:"cond"}; renderModal(); break;
+    case "cond-remove":    modOf(id).conds.splice(idx,1); render(); break;
+    case "reset":          Object.assign(modOf(id), {trigger:null, conds:[], saa:false}); render(); break;
+    case "modal-close":    modal = null; renderModal(); break;
+    case "pick-trigger":   modOf(id).trigger = newTrigger(el.dataset.type); modOf(id).saa = true; modal = null; render(); break;
+    case "pick-cond":      modOf(id).conds.push(newCond(el.dataset.type)); modal = null; render(); break;
+    case "pick-open": {
+      const kind = el.dataset.kind;
+      let cur;
+      if(kind==="modul") cur = modOf(id).trigger.modul;
+      else if(kind==="calc") cur = modOf(id).conds[idx].calc;
+      else cur = modOf(id).conds[idx].op;
+      modal = {id, kind:"pick", pickKind:kind, idx, sel:(cur===""||cur==null?null:cur)};
+      renderModal(); break;
+    }
+    case "pick-sel": {
+      let v = el.dataset.val;
+      if(modal.pickKind==="modul") v = +v;
+      modal.sel = v;
+      // update selection classes in place — no full re-render (avoids pop-animation flicker)
+      document.querySelectorAll(".pick-card, .grid-card").forEach(c=>c.classList.remove("selected"));
+      el.classList.add("selected");
+      const applyBtn = document.querySelector("[data-act='pick-apply']");
+      if(applyBtn){ applyBtn.classList.remove("is-disabled"); applyBtn.removeAttribute("disabled"); }
+      break;
+    }
+    case "pick-apply": {
+      const {id:mid, pickKind, idx:pidx, sel} = modal;
+      if(pickKind==="modul") modOf(mid).trigger.modul = sel;
+      else if(pickKind==="calc") modOf(mid).conds[pidx].calc = sel;
+      else modOf(mid).conds[pidx].op = sel;
+      modal = null; render(); break;
+    }
+  }
+});
+
+document.getElementById("modules").addEventListener("change", e=>{
+  const el = e.target.closest("[data-act]"); if(!el) return;
+  const act = el.dataset.act, id = +el.dataset.id;
+  const idx = el.dataset.idx!==undefined ? +el.dataset.idx : null;
+  const m = modOf(id);
+  switch(act){
+  }
+});
+
+document.getElementById("modules").addEventListener("input", e=>{
+  const el = e.target.closest("[data-act]"); if(!el) return;
+  const act = el.dataset.act, id = +el.dataset.id;
+  const idx = el.dataset.idx!==undefined ? +el.dataset.idx : null;
+  const m = modOf(id);
+  switch(act){
+    case "freq-count":   m.freqCount = el.value; break;
+    case "freq-days":    m.freqDays = el.value; break;
+    case "cond-dage":    condOf(id,idx).dage = el.value===""?"":+el.value; break;
+    case "cond-val":     condOf(id,idx).val  = el.value===""?"":+el.value; break;
+  }
+});
+
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && modal){ modal=null; renderModal(); } });
+
+/* ---------- validation + snackbar ---------- */
+function validateModules(){
+  const issues = [];
+  modules.forEach(m=>{
+    const name = `Modul ${posOf(m.id)} (${MODULE_TITLE(m.id)})`;
+    if(m.trigger){
+      if((m.trigger.type==="modul_indsendt"||m.trigger.type==="modul_tilgaeng") && !m.trigger.modul)
+        issues.push(`${name}: trigger mangler et valgt modul.`);
+      m.conds.forEach((c,i)=>{
+        if(c.type==="tid_tilgaeng"||c.type==="tid_start"){ if(c.dage===""||c.dage==null) issues.push(`${name}: betingelse ${i+1} mangler antal dage.`); }
+        if(c.type==="beregning"){
+          if(!c.calc) issues.push(`${name}: betingelse ${i+1} mangler en beregning.`);
+          if(!c.op)   issues.push(`${name}: betingelse ${i+1} mangler en operator.`);
+          if(c.val===""||c.val==null) issues.push(`${name}: betingelse ${i+1} mangler en værdi.`);
+        }
+      });
+    }
+    if(m.repeat){
+      if(m.freqMode==="antal" && (m.freqCount===""||m.freqCount==null)) issues.push(`${name}: gentagelse mangler antal gange.`);
+      if(m.freqMode==="periode" && (m.freqDays===""||m.freqDays==null)) issues.push(`${name}: gentagelse mangler antal dage for perioden.`);
+    }
+  });
+  return issues;
+}
+
+let snackDetailsOpen = false;
+function showSnackbar(){
+  const issues = validateModules();
+  const ok = issues.length===0;
+  const root = document.getElementById("snackbar-root");
+  const details = (!ok && snackDetailsOpen) ? `
+    <ul class="snack-list">${issues.map(i=>`<li>${i}</li>`).join("")}</ul>` : "";
+  root.innerHTML = `
+    <div class="snackbar ${ok?"ok":"err"}">
+      <div class="snack-row">
+        <span class="snack-icon">${ok?"✓":"!"}</span>
+        <span class="snack-msg">${ok?"Alt er gyldigt og gemt." : `${issues.length} ${issues.length===1?"problem":"problemer"} forhindrer gemning.`}</span>
+        ${ok?"":`<button class="snack-link" data-act="snack-details">${snackDetailsOpen?"Skjul":"Se detaljer"}</button>`}
+        <button class="snack-x" data-act="snack-close">×</button>
+      </div>
+      ${details}
+    </div>`;
+  if(ok){ clearTimeout(window.__snackTimer); window.__snackTimer = setTimeout(()=>{ root.innerHTML=""; }, 3200); }
+}
+
+document.addEventListener("click", e=>{
+  const el = e.target.closest("[data-act]"); if(!el) return;
+  if(el.dataset.act==="gem"){ snackDetailsOpen=false; showSnackbar(); }
+  else if(el.dataset.act==="snack-details"){ snackDetailsOpen=!snackDetailsOpen; showSnackbar(); }
+  else if(el.dataset.act==="snack-close"){ document.getElementById("snackbar-root").innerHTML=""; }
+});
+
+render();
+</script>
+</body>
+</html>

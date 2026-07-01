@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Behandler · Rediger forløb</title>
+<style>
+  :root {
+    --navy: #1f2147;
+    --navy-soft: #2d2f5e;
+    --cream: #faf6ef;
+    --cream-panel: #ffffff;
+    --card: #ffffff;
+    --line: #e7e2d6;
+    --line-soft: #efe9dd;
+    --ink: #1f2147;
+    --muted: #6f6c7d;
+    --muted-2: #908d9c;
+    --lilac: #e8e7fb;
+    --lilac-ink: #5a52c4;
+    --amber: #f7c948;
+    --amber-bg: #fdf0c9;
+    --green: #1f8a5b;
+    --shadow: 0 1px 2px rgba(31,33,71,.04), 0 8px 24px rgba(31,33,71,.06);
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    background: var(--navy);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 24px;
+  }
+  .topbar .back {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.25);
+    background: transparent; color: #fff;
+    display: grid; place-items: center; cursor: pointer; font-size: 16px;
+  }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,#7b8cff,#5a52c4); display:grid; place-items:center; font-weight:700; font-size:13px; }
+  .patient { display: flex; align-items: center; gap: 12px; }
+  .patient .name { font-weight: 700; font-size: 16px; }
+  .meta-sep { width: 1px; height: 34px; background: rgba(255,255,255,.18); }
+  .meta { display: flex; flex-direction: column; gap: 1px; }
+  .meta .label { font-size: 11px; color: rgba(255,255,255,.55); }
+  .meta .val { font-size: 13px; font-weight: 600; }
+  .topbar .spacer { flex: 1; }
+  .pill-btn {
+    border: 1px solid rgba(255,255,255,.25); background: transparent; color: #fff;
+    padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .pill-btn .dot { width: 16px; height:16px; border-radius:50%; background:#e5484d; color:#fff; font-size:10px; display:grid; place-items:center; }
+
+  /* ---------- Sub header ---------- */
+  .subhead {
+    display: flex; align-items: center; gap: 20px;
+    padding: 16px 24px; border-bottom: 1px solid var(--line);
+    background: var(--cream-panel);
+  }
+  .subhead .title { font-size: 17px; font-weight: 700; }
+  .subhead .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .col { display:flex; flex-direction:column; }
+  .field-label { font-size: 11px; color: var(--muted-2); }
+  .field-val { font-size: 13px; font-weight: 600; }
+
+  /* ---------- Layout ---------- */
+  .layout { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 132px); }
+  .sidebar { background: var(--cream-panel); border-right: 1px solid var(--line); padding: 22px 18px; }
+  .sidebar .head { display:flex; align-items:center; justify-content: space-between; margin-bottom: 16px; }
+  .sidebar .head h2 { font-size: 17px; margin: 0; }
+  .edit-link { font-size: 13px; font-weight: 600; color: var(--navy); text-decoration: underline; cursor: pointer; background:none; border:none; padding:0; }
+  .nav-item { display: flex; gap: 12px; padding: 11px 12px; border-radius: 12px; cursor: pointer; }
+  .nav-item:hover { background: #f1ece1; }
+  .nav-item.active { background: #ece9fb; }
+  .nav-item .num { font-weight: 700; font-size: 13px; color: var(--muted); width: 18px; text-align:center; }
+  .nav-item.active .num { color: var(--navy); }
+  .nav-item .body .t { font-size: 14px; font-weight: 600; }
+  .nav-item .body .s { font-size: 11.5px; color: var(--muted-2); margin-top: 2px; }
+  .nav-item .body .s.green { color: var(--green); font-weight: 600; }
+  .nav-item .body .s.amber { color: #c77800; font-weight: 600; }
+
+  .content { padding: 30px 38px 80px; max-width: 920px; margin: 0 auto; width: 100%; }
+  .page-title { font-size: 30px; font-weight: 800; letter-spacing: -.5px; margin: 0; }
+  .page-sub { color: var(--muted); font-size: 15px; margin: 8px 0 0; }
+
+  .title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+  .add-btn { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 11px 18px; font-size: 14px; font-weight: 700; color: var(--navy); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: var(--shadow); flex: none; margin-top: 6px; }
+  .add-btn:hover { border-color: var(--navy); }
+
+  /* ---------- Module cards ---------- */
+  .mcard { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px 24px; margin-bottom: 20px; }
+  .mhead { display: flex; align-items: center; gap: 14px; }
+  .mnum { width: 30px; height: 30px; border-radius: 50%; background: var(--lilac); color: var(--lilac-ink); font-weight: 700; font-size: 13px; display: grid; place-items: center; }
+  .mnum.addon-num { width: auto; min-width: 30px; padding: 0 10px; border-radius: 999px; }
+  .mnum.filled { background: var(--navy); color: #fff; }
+  .mtitle { font-size: 19px; font-weight: 700; }
+  .mtag { font-size: 12px; font-weight: 600; color: var(--lilac-ink); background: var(--lilac); padding: 5px 11px; border-radius: 999px; }
+  .mhead .spacer { flex: 1; }
+  .icon-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--navy); display: grid; place-items: center; cursor: pointer; font-size: 15px; }
+  .icon-btn:hover { background: #f6f3ec; }
+  .icon-btn.disabled { opacity: .32; cursor: not-allowed; }
+  .icon-group { display: flex; gap: 8px; align-items: center; }
+
+  /* addon tag + remove button */
+  .tag-addon { font-size: 12px; font-weight: 600; color: var(--lilac-ink); background: var(--lilac); padding: 5px 11px; border-radius: 999px; }
+  .remove-addon { border: 1px solid #f0d5d2; background: #fff; color: #c0392b; border-radius: 999px; padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .remove-addon:hover { background: #fdecea; border-color: #e0b4b0; }
+  .activate-btn { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 600; color: var(--navy); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+  .activate-btn:hover { border-color: var(--navy); background: #f6f3ec; }
+  .activate-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .activate-btn.active:hover { background: var(--navy-soft); }
+
+  .logic-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .logic-head .section-label { margin-bottom: 0; }
+  .logic-override { border: 1px solid #b9b3e0; border-radius: 12px; padding: 14px 16px; background: #eeecfb; }
+  .logic-override .override-main { font-size: 15px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+  .logic-override .ov-ic { color: var(--amber); }
+  .logic-override .override-sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .logic-override .override-sub s { color: var(--muted-2); }
+
+  .config { border: 1px solid var(--line-soft); border-radius: 14px; padding: 18px 18px; margin-top: 18px; background: #fffdf9; }
+  .config-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .config-row .label { font-size: 15px; font-weight: 700; }
+  .toggles { display: flex; gap: 22px; align-items: center; }
+
+  /* toggle */
+  .toggle-wrap { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink); }
+  .toggle-wrap.locked { color: var(--muted-2); }
+  .switch { position: relative; width: 46px; height: 26px; border-radius: 999px; background: #cfcadb; transition: background .15s; flex: none; }
+  .switch.on { background: var(--navy); }
+  .switch.locked { background: #d9d4c8; }
+  .switch.on.locked { background: #b9b3e0; }
+  .switch .knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+  .switch.on .knob { left: 23px; }
+  .switch.clickable { cursor: pointer; }
+
+  .divider { height: 1px; background: var(--line-soft); margin: 16px 0; }
+  .section-label { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+
+  /* read-only afviklingslogik (looks like the editor dropdown but locked) */
+  .logic-readonly {
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+    background: #f6f3ec; color: var(--ink); font-size: 15px; cursor: not-allowed;
+  }
+  .logic-readonly .lock { color: var(--muted-2); font-size: 13px; }
+
+  /* repeat config (editable) — number input + mode-dependent info */
+  .repeat { border: 1px solid #c4ccea; border-radius: 14px; padding: 18px; margin-top: 14px; background: #fff; }
+  .repeat-help { font-size: 13px; color: var(--muted); display:flex; align-items:center; gap:6px; margin-bottom: 14px; }
+  .qmark { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--muted-2); color: var(--muted-2); font-size: 11px; display: inline-grid; place-items: center; }
+  .repeat-row { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+  .repeat .seg { display:inline-flex; background:#f6f3ec; border-radius: 10px; padding: 4px; }
+  .repeat .seg button { border:none; background:transparent; padding:9px 18px; border-radius:8px; font-size:14px; font-weight:600; color:var(--muted); cursor:pointer; }
+  .repeat .seg button.active { background: var(--navy); color:#fff; }
+  .num-input { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; width: 170px; }
+  .num-input input { flex: 1 1 auto; min-width: 0; border: none; padding: 13px 14px; font-size: 14px; outline: none; background: transparent; color: var(--ink); -moz-appearance: textfield; }
+  .num-input input::-webkit-outer-spin-button, .num-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .num-input .unit { flex: none; padding: 0 14px; font-size: 13px; color: var(--muted); border-left: 1px solid var(--line); display: flex; align-items: center; background: #f6f3ec; }
+  .info-inline { display: flex; gap: 8px; align-items: flex-start; margin-top: 14px; font-size: 13px; color: #3a3d63; background: #eef1fb; border-radius: 10px; padding: 12px 14px; line-height: 1.5; }
+  .info-inline .info-ic { color: var(--lilac-ink); font-size: 14px; flex: none; margin-top: 1px; }
+
+  .empty-add { color: var(--muted-2); font-size: 13px; margin-top: 12px; }
+
+  /* ---------- Modal ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(31,33,71,.4); display: none; align-items: center; justify-content: center; z-index: 50; }
+  .overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 20px; width: 560px; max-width: 92vw; max-height: 86vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: flex; flex-direction: column; }
+  .modal-head { padding: 22px 24px 16px; border-bottom: 1px solid var(--line); }
+  .modal-head h3 { margin: 0; font-size: 20px; }
+  .modal-head p { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+  .modal-body { padding: 16px 24px; overflow-y: auto; }
+  .add-row { display: flex; align-items: flex-start; gap: 14px; border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .add-row .code { font-size: 12px; font-weight: 700; color: var(--lilac-ink); background: var(--lilac); padding: 5px 9px; border-radius: 8px; flex: none; }
+  .add-row .meta { flex: 1; }
+  .add-row .meta .t { font-size: 15px; font-weight: 600; }
+  .add-row .meta .d { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  .add-row button { background: var(--navy); color: #fff; border: none; padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; flex: none; }
+  .add-row button:disabled { background: #cfcadb; cursor: not-allowed; }
+  .modal-foot { padding: 16px 24px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; }
+  .modal-foot button { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 10px 18px; font-weight: 600; cursor: pointer; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <button class="back">←</button>
+    <div class="patient">
+      <div class="avatar">SH</div>
+      <div class="name">Sven Lund Hansen</div>
+    </div>
+    <div class="meta-sep"></div>
+    <div class="meta"><span class="label">CPR-nummer</span><span class="val">202020-XXXX</span></div>
+    <div class="meta"><span class="label">Alder</span><span class="val">32 år</span></div>
+    <div class="spacer"></div>
+    <button class="pill-btn">💬 Beskeder <span class="dot">1</span></button>
+    <button class="pill-btn">📄 Noter</button>
+    <button class="pill-btn">···</button>
+  </div>
+
+  <!-- Sub header -->
+  <div class="subhead">
+    <div class="col">
+      <div class="title">Behandling af generaliseret angst</div>
+      <div class="sub">Startet 1. maj 2026 (3 uger siden)</div>
+    </div>
+    <div class="col"><span class="field-label">Diagnose</span><span class="field-val">F41.1 – Generaliseret angst (GAD)</span></div>
+    <div class="col"><span class="field-label">Behandler</span><span class="field-val">Søren Mads Rasmussen</span></div>
+  </div>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="head">
+        <h2>Forløb</h2>
+        <button class="edit-link" id="editLink">Redigér</button>
+      </div>
+      <div class="nav-item active"><div class="num">▦</div><div class="body"><div class="t">Overblik</div><div class="s">Opgaver, aktiviteter og udvikling</div></div></div>
+      <div class="nav-item"><div class="num">1</div><div class="body"><div class="t">Forstå din angst</div><div class="s green">● Gennemført</div></div></div>
+      <div class="nav-item"><div class="num">2</div><div class="body"><div class="t">Angstens grundprincipper</div><div class="s green">● Gennemført · Udfør 2 gange</div></div></div>
+      <div class="nav-item"><div class="num">3</div><div class="body"><div class="t">Håndtering af angst</div><div class="s amber">● Afventer feedback</div></div></div>
+      <div class="nav-item"><div class="num">4</div><div class="body"><div class="t">Angst og kroppen</div><div class="s">I gang</div></div></div>
+      <div class="nav-item"><div class="num">5</div><div class="body"><div class="t">Strategier mod angst</div><div class="s">Ikke aktiv</div></div></div>
+    </aside>
+
+    <!-- Content -->
+    <main class="content">
+      <!-- DEFAULT: empty state behind Redigér -->
+      <div id="emptyState">
+        <h1 class="page-title">Rediger forløb</h1>
+        <p class="page-sub">Klik på <strong>Redigér</strong> i venstre panel for at tilpasse forløbet.</p>
+        <div class="mcard" style="text-align:center; padding: 60px 24px; color: var(--muted); margin-top: 40px;">
+          <div style="font-size:34px; margin-bottom:12px;">🛠️</div>
+          <div style="font-size:18px; font-weight:700; color: var(--ink);">Ikke en del af prototypen</div>
+          <div style="margin-top:6px; font-size:14px;">Tilpasning af forløbet er ikke åbnet endnu.</div>
+        </div>
+      </div>
+
+      <!-- EDIT VIEW -->
+      <div id="editView" class="hidden">
+        <div class="title-row">
+          <div>
+            <h1 class="page-title">Rediger forløb</h1>
+            <p class="page-sub">Du kan som behandler tilpasse borgerens forløb efter behov.</p>
+          </div>
+          <button class="add-btn" id="openModal">＋ Tilføj modul</button>
+        </div>
+
+        <div id="moduleList"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Tilføj modul</h3>
+        <p>Vælg et tillægsmodul fra listen. Modulet placeres sidst i forløbet.</p>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-foot"><button id="closeModal">Luk</button></div>
+    </div>
+  </div>
+
+<script>
+  // ----- State -----
+  const baseModules = [
+    { code:'M7K', num:1, title:'Hvad er angst', filled:false, repeat:false, feedback:true, logic:'Modulet starter ved forløbets startdato', addon:false },
+    { code:'M2X', num:2, title:'Hvad er tankemylder', filled:false, repeat:true, feedback:true, logic:'Starter når forrige modul er afsluttet', addon:false },
+    { code:'M4B', num:3, title:'Øvelser til angst', filled:false, repeat:false, feedback:true, logic:'Starter når forrige modul er afsluttet', addon:false },
+  ];
+  let modules = JSON.parse(JSON.stringify(baseModules));
+
+  const addonCatalog = [
+    { code:'T1', title:'Søvn og angst', desc:'Hjælper borgeren med at forstå sammenhængen mellem søvn og angst. Indeholder øvelser til at etablere en fast døgnrytme og teknikker til at falde til ro inden sengetid.', added:false },
+    { code:'T2', title:'Mestring af social angst', desc:'Konkrete redskaber til at håndtere sociale situationer, der udløser angst. Borgeren arbejder gradvist med eksponering og lærer at genkende og udfordre negative tanker.', added:false },
+    { code:'T3', title:'Angst i hverdagen', desc:'Praktiske strategier til at håndtere angst i dagligdagens situationer – fra indkøb til arbejdsopgaver. Fokus på små, håndterbare skridt der bygger tryghed op over tid.', added:false },
+    { code:'T4', title:'Vejen til ro og balance', desc:'Afsluttende modul der samler forløbets redskaber. Borgeren lægger en plan for at fastholde fremgang og forebygge tilbagefald efter behandlingens afslutning.', added:false },
+  ];
+
+  // ----- Render module list -----
+  const ADDON_LOGIC = 'Når forrige modul er indsendt → Gør modulet tilgængeligt for borger';
+
+  function moduleCard(m) {
+    const rmode = m.repeatMode || 'antal';
+    const repeatInfo = rmode === 'antal'
+      ? 'Modulet vises dagligt for borgeren, indtil det samlede antal gennemførelser er nået.'
+      : 'Borgeren kan gennemføre modulet så mange gange de ønsker inden for det valgte antal dage.';
+    const repeatHtml = m.repeat ? `
+      <div class="repeat">
+        <div class="repeat-help">Vælg frekvens for gentagelse af modul</div>
+        <div class="repeat-row">
+          <div class="seg" data-repeat-seg="${m.num}">
+            <button class="${rmode==='antal'?'active':''}" data-mode="antal" data-mnum="${m.num}">Antal gange</button>
+            <button class="${rmode==='periode'?'active':''}" data-mode="periode" data-mnum="${m.num}">Periode</button>
+          </div>
+          <div class="num-input">
+            <input type="number" min="1" placeholder="${rmode==='antal'?'Fx 3':'Fx 14'}" value="${m.repeatValue||''}" data-repeat-val="${m.num}">
+            <span class="unit">${rmode==='antal'?'gange':'dage'}</span>
+          </div>
+        </div>
+        <div class="info-inline"><span class="info-ic">ⓘ</span> ${repeatInfo}</div>
+      </div>` : '';
+
+    // Behandler: toggle shows editor's choice but is LOCKED. Wording from screen 1: "Feedback før gennemført"
+    return `
+    <div class="mcard">
+      <div class="mhead">
+        <div class="mnum ${m.filled?'filled':''} ${m.addon?'addon-num':''}">${m.addon?m.code:m.num}</div>
+        <div class="mtitle">${m.title}</div>
+        ${m.tag?`<span class="mtag">${m.tag}</span>`:''}
+        ${m.addon?`<span class="tag-addon">Tillægsmodul</span>`:''}
+        <div class="spacer"></div>
+        <div class="icon-group">
+          ${m.addon && m.hasAddonSiblings ? `
+          <div class="icon-btn ${m.isFirstAddon?'disabled':''}" ${m.isFirstAddon?'':`data-move-up="${m.num}"`} title="Flyt op">⌃</div>
+          <div class="icon-btn ${m.isLastAddon?'disabled':''}" ${m.isLastAddon?'':`data-move-down="${m.num}"`} title="Flyt ned">⌄</div>` : ''}
+          <div class="icon-btn">ⓘ</div>
+          ${m.addon?`<button class="remove-addon" data-remove-addon="${m.num}" title="Fjern tillægsmodul">✕ Fjern</button>`:''}
+        </div>
+      </div>
+
+      <div class="config">
+        <div class="config-row">
+          <div class="label">Konfiguration af modul${m.tag?'pakken':''}</div>
+          <div class="toggles">
+            <span class="toggle-wrap" title="Slå gentagelse til/fra">
+              Gentag modul
+              <span class="switch ${m.repeat?'on':''} clickable" data-toggle-repeat="${m.num}"><span class="knob"></span></span>
+            </span>
+            <span class="toggle-wrap locked" title="Indstillet af redaktør">
+              Feedback før gennemført
+              <span class="switch ${m.feedback?'on':''} locked"><span class="knob"></span></span>
+            </span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="logic-head">
+          <span class="section-label">Afviklingslogik</span>
+          <button class="activate-btn ${m.manual?'active':''}" data-activate="${m.num}" title="${m.manual?'Fortryd manuel aktivering':'Aktivér modulet manuelt nu'}">${m.manual?'✓ Aktiveret manuelt':'⚡ Aktivér manuelt'}</button>
+        </div>
+        ${m.manual ? `
+        <div class="logic-override">
+          <div class="override-main"><span class="ov-ic">⚡</span> Aktiveret manuelt af behandler</div>
+          <div class="override-sub">Tilsidesætter: <s>${m.logic}</s></div>
+        </div>` : `
+        <div class="logic-readonly">
+          <span>${m.logic}</span>
+          <span class="lock">🔒 ${m.addon?'Kan ikke redigeres':'Fastlagt af redaktør'}</span>
+        </div>`}
+
+        ${repeatHtml}
+      </div>
+    </div>`;
+  }
+
+  function renderModules() {
+    // mark first/last addon so we can disable the boundary arrows
+    const addonIdx = modules.map((m,i)=>m.addon?i:-1).filter(i=>i>=0);
+    modules.forEach(m=>{ m.isFirstAddon = false; m.isLastAddon = false; });
+    if (addonIdx.length) {
+      modules[addonIdx[0]].isFirstAddon = true;
+      modules[addonIdx[addonIdx.length-1]].isLastAddon = true;
+    }
+    const multipleAddons = addonIdx.length > 1;
+    let addonCounter = 0;
+    modules.forEach(m=>{
+      if(m.addon){ m.hasAddonSiblings = multipleAddons; addonCounter++; m.displayCode = 'T'+addonCounter; }
+    });
+
+    document.getElementById('moduleList').innerHTML = modules.map(moduleCard).join('');
+    // wire repeat mode segment (Antal gange / Periode) — swaps input + info
+    document.querySelectorAll('[data-repeat-seg] button').forEach(b=>{
+      b.onclick = ()=>{
+        const m = modules.find(x=>x.num===+b.dataset.mnum);
+        m.repeatMode = b.dataset.mode;
+        renderModules();
+      };
+    });
+    // persist typed value
+    document.querySelectorAll('[data-repeat-val]').forEach(inp=>{
+      inp.oninput = ()=>{
+        const m = modules.find(x=>x.num===+inp.dataset.repeatVal);
+        m.repeatValue = inp.value;
+      };
+    });
+    // wire Gentag modul toggle (editable for behandler)
+    document.querySelectorAll('[data-toggle-repeat]').forEach(sw=>{
+      sw.onclick = ()=>{
+        const num = +sw.dataset.toggleRepeat;
+        const m = modules.find(x=>x.num===num);
+        m.repeat = !m.repeat;
+        renderModules();
+      };
+    });
+    // wire addon reorder (swap only with adjacent addon)
+    const swapByNum = (num, dir)=>{
+      const i = modules.findIndex(x=>x.num===num);
+      const j = i + dir;
+      if (j<0 || j>=modules.length || !modules[j].addon) return;
+      [modules[i], modules[j]] = [modules[j], modules[i]];
+      // renumber sequentially so positions stay correct
+      modules.forEach((m,k)=> m.num = k+1);
+      renderModules();
+    };
+    document.querySelectorAll('[data-move-up]').forEach(b=> b.onclick=()=>swapByNum(+b.dataset.moveUp,-1));
+    document.querySelectorAll('[data-move-down]').forEach(b=> b.onclick=()=>swapByNum(+b.dataset.moveDown,1));
+
+    // wire Aktivér manuelt (override afviklingslogik)
+    document.querySelectorAll('[data-activate]').forEach(b=> b.onclick=()=>{
+      const m = modules.find(x=>x.num===+b.dataset.activate);
+      m.manual = !m.manual; renderModules();
+    });
+
+    // remove addon module (also re-enables it in the modal)
+    document.querySelectorAll('[data-remove-addon]').forEach(b=> b.onclick=()=>{
+      const m = modules.find(x=>x.num===+b.dataset.removeAddon);
+      const cat = addonCatalog.find(a=>a.code===m.code);
+      if (cat) cat.added = false;
+      modules = modules.filter(x=>x.num!==+b.dataset.removeAddon);
+      modules.forEach((mm,k)=> mm.num = k+1);
+      renderModules();
+    });
+  }
+
+  // ----- Modal -----
+  function renderModal() {
+    document.getElementById('modalBody').innerHTML = addonCatalog.map((a,i)=>`
+      <div class="add-row">
+        <span class="code">${a.code}</span>
+        <div class="meta"><div class="t">${a.title}</div><div class="d">${a.desc}</div></div>
+        <button data-add="${i}" ${a.added?'disabled':''}>${a.added?'Tilføjet':'Tilføj'}</button>
+      </div>`).join('');
+    document.querySelectorAll('[data-add]').forEach(btn=>{
+      btn.onclick = ()=>{
+        const i = +btn.dataset.add;
+        const a = addonCatalog[i];
+        a.added = true;
+        modules.push({ code:a.code, num:modules.length+1, title:a.title, filled:false, repeat:false, feedback:false, logic:ADDON_LOGIC, addon:true });
+        modules.forEach((m,k)=> m.num = k+1);
+        renderModules(); renderModal();
+      };
+    });
+  }
+
+  // ----- Wiring -----
+  document.getElementById('editLink').onclick = ()=>{
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('editView').classList.remove('hidden');
+    renderModules();
+  };
+  document.getElementById('openModal').onclick = ()=>{ renderModal(); document.getElementById('overlay').classList.add('open'); };
+  document.getElementById('closeModal').onclick = ()=> document.getElementById('overlay').classList.remove('open');
+  document.getElementById('overlay').onclick = (e)=>{ if(e.target.id==='overlay') e.currentTarget.classList.remove('open'); };
+</script>
+</body>
+</html>

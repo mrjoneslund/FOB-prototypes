@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regler – Behandling af angst</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Rethink+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand:#101030;--brand-fill:#d2ecf4;--sky-50:#f0f5fa;
+    --teal-tint:#e3f1ef;--success-tint:#d9f2e7;--success:#0f9d6b;
+    --warn-tint:#f9f0cb;--warn-border:#f3dc91;--warn-text:#7c310b;
+    --danger:#e23d36;--danger-tint:#ffeceb;--danger-border:#ff6058;
+    --text:#2d2c2b;--text-secondary:#4d485e;--text-tertiary:#73707f;--text-disabled:#908d9b;
+    --border:#dcdbdf;--border-strong:#908d9b;--card-border:#e2e1e6;--bg:#f7f7f8;--radius:14px;
+    --evt:#3b5bdb;--evt-tint:#edf1ff;--cond:#7048a8;--cond-tint:#f3eefb;--act:#0c8a5b;--act-tint:#e8f7f0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Rethink Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  .ff-domine{font-family:'Domine',serif}
+
+  /* BROWSER CHROME */
+  .browser-bar{background:#dee1e6;height:42px;display:flex;align-items:flex-end;padding:0 12px}
+  .browser-controls{display:flex;gap:8px;align-items:center;padding:0 8px 12px}
+  .browser-controls .c{width:12px;height:12px;border-radius:50%}
+  .bc-red{background:#ed6a5e}.bc-yellow{background:#f4bf4f}.bc-green{background:#61c554}
+  .tab{display:flex;align-items:center;gap:9px;background:#fff;border-radius:8px 8px 0 0;padding:8px 10px;width:180px;font-size:12px;color:#494c4f}
+  .tab .fav{width:16px;height:16px;border-radius:4px;background:var(--brand-fill);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--brand)}
+  .tab .x{margin-left:auto;color:#888;font-size:14px}
+  .plus{margin-left:8px;color:#5f6368;font-size:18px;padding-bottom:6px}
+  .url-bar{background:#fff;height:38px;display:flex;align-items:center;padding:0 14px;gap:12px;box-shadow:inset 0 -1px 0 #dadce0}
+  .url-nav{display:flex;gap:18px;color:#5f6368;font-size:15px}
+  .url-fill{flex:1;background:#f1f3f4;height:28px;border-radius:14px;display:flex;align-items:center;padding:0 12px;gap:8px;font-size:14px;color:#202124;font-family:'Inter',sans-serif}
+  .url-fill .lock{font-size:11px;color:#5f6368}
+  .url-right{display:flex;gap:14px;color:#5f6368;font-size:15px;align-items:center}
+
+  /* TOP-NAV-SUB */
+  .topnav{background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:16px 24px}
+  .icon-circle{width:40px;height:40px;border-radius:9999px;border:1px solid var(--brand);background:#fff;display:flex;align-items:center;justify-content:center;color:var(--brand);flex-shrink:0;transition:.15s}
+  .icon-circle:hover{background:var(--sky-50)}.icon-circle svg{width:16px;height:16px}
+  .topnav .titles{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .crumbrow{display:flex;align-items:center;gap:8px}
+  .crumbrow .crumb{font-size:14px;color:var(--text-tertiary)}
+  .crumbrow .dot{width:4px;height:4px;border-radius:50%;background:#c3c1cb}
+  .badge-draft{background:var(--warn-tint);border:1px solid var(--warn-border);color:var(--warn-text);font-size:12px;font-weight:500;height:20px;padding:0 12px;border-radius:9999px;display:inline-flex;align-items:center}
+  .badge-active{background:var(--success-tint);border:1px solid #9bd9bf;color:var(--success);font-size:12px;font-weight:600;height:20px;padding:0 12px;border-radius:9999px;display:inline-flex;align-items:center}
+  .titlerow{display:flex;align-items:center;gap:2px}
+  .titlerow h1{font-size:28px;font-weight:700;color:var(--text);line-height:1.3}
+  .edit-pencil{width:32px;height:32px;border-radius:9999px;display:flex;align-items:center;justify-content:center;color:var(--text-tertiary)}
+  .edit-pencil:hover{background:var(--sky-50)}.edit-pencil svg{width:16px;height:16px}
+  .saved-label{font-size:12px;color:var(--text-tertiary);white-space:nowrap}
+  .topnav .btns{display:flex;gap:8px;align-items:center}
+  .btn{height:40px;border-radius:9999px;padding:0 16px;font-size:14px;font-weight:500;letter-spacing:.5px;display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:.15s;white-space:nowrap}
+  .btn-secondary{background:var(--brand-fill);border:1px solid var(--brand);color:var(--brand)}
+  .btn-secondary:hover{background:#bfe4ef}.btn-secondary:active{transform:translateY(1px)}
+  .btn-primary-disabled{background:#eae9ec;color:var(--text-disabled);cursor:not-allowed}
+  .btn-icon{width:40px;height:40px;border-radius:9999px;border:1px solid var(--brand);background:#fff;color:var(--brand);display:flex;align-items:center;justify-content:center}
+  .btn-icon:hover{background:var(--sky-50)}.btn-icon svg{width:16px;height:16px}
+
+  /* TAB-NAV */
+  .tabnav{background:#fff;border-bottom:1px solid var(--border);padding:12px 24px;display:flex;gap:4px}
+  .tabitem{padding:8px 16px;border-radius:8px;font-size:16px;font-weight:500;letter-spacing:.5px;color:var(--text-secondary);transition:.15s}
+  .tabitem:hover{background:var(--sky-50)}.tabitem.active{background:var(--brand);color:#fff}
+
+  /* PAGE */
+  .page{max-width:760px;margin:0 auto;padding:32px 20px 220px}
+  .page-head{margin-bottom:28px}
+  .page-head h2{font-size:22px;font-weight:700;letter-spacing:-.2px}
+  .page-head p{color:var(--text-tertiary);font-size:14px;margin-top:8px;line-height:1.55;max-width:620px}
+
+  /* big dashed add-card */
+  .add-card{width:100%;border:1.5px dashed #c2c0cc;border-radius:18px;background:#fff;padding:40px 24px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:17px;font-weight:700;color:var(--brand);transition:.15s;letter-spacing:.2px}
+  .add-card:hover{border-color:var(--brand);background:#fafafd}
+  .add-card svg{width:22px;height:22px;stroke-width:2.4}
+  .add-card.small{padding:22px;font-size:15px;font-weight:600;border-radius:var(--radius);margin-top:28px}
+  .add-card.small svg{width:18px;height:18px}
+
+  /* RULE CARD */
+  .cards{display:flex;flex-direction:column;gap:28px}
+  .card{background:#fff;border:1px solid var(--card-border);border-radius:var(--radius);padding:22px;transition:.18s;position:relative;box-shadow:0 1px 2px rgba(16,16,48,.05),0 2px 8px rgba(16,16,48,.04)}
+  .card.invalid{border-color:var(--danger-border);box-shadow:0 0 0 1px var(--danger-border),0 2px 8px rgba(226,61,54,.08)}
+  .card-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #f0eff3}
+  .card-head .tw{flex:1;min-width:0}
+  .reglbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#b7b5c0;font-weight:600}
+  .namerow{display:flex;align-items:center;gap:6px;margin-top:3px}
+  .rulename{font-family:'Inter',sans-serif;font-size:18px;font-weight:600;color:#272727}
+  .rulename.unset{color:#a4a2ad;font-weight:500;font-style:italic}
+  .name-pencil{width:26px;height:26px;border-radius:6px;color:#9a98a3;display:flex;align-items:center;justify-content:center}
+  .name-pencil:hover{background:#f3f3f6;color:var(--brand)}.name-pencil svg{width:13px;height:13px}
+  .trash{width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:#777;flex-shrink:0;border-radius:8px}
+  .trash:hover{background:#fdecec;color:var(--danger)}.trash svg{width:18px;height:18px}
+
+  /* empty card */
+  .card-empty{border:1.5px dashed #cdccd5;border-radius:12px;padding:40px 24px;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .card-empty .e-ico{width:46px;height:46px;border-radius:50%;background:var(--evt-tint);color:var(--evt);display:flex;align-items:center;justify-content:center}
+  .card-empty .e-ico svg{width:22px;height:22px}
+  .card-empty p{font-size:13.5px;color:var(--text-tertiary);text-align:center;max-width:320px;line-height:1.5}
+  .btn-trigger{height:42px;border-radius:9999px;background:var(--brand);color:#fff;font-weight:600;font-size:14px;letter-spacing:.4px;padding:0 20px;display:inline-flex;align-items:center;gap:7px}
+  .btn-trigger:hover{background:#1f1f4a}.btn-trigger svg{width:16px;height:16px}
+
+  /* ECA rows */
+  .eca{display:flex;flex-direction:column;gap:14px}
+  .eca-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:relative}
+  .kw-chip{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 11px;border-radius:9px;font-weight:700;font-size:13px;letter-spacing:.6px;flex-shrink:0}
+  .kw-chip .kw-ico{width:18px;height:18px;display:flex;align-items:center;justify-content:center}
+  .kw-chip .kw-ico svg{width:18px;height:18px}
+  .kw-event{background:var(--evt-tint);color:var(--evt)}
+  .kw-cond{background:var(--cond-tint);color:var(--cond)}
+  .kw-act{background:var(--act-tint);color:var(--act)}
+  .conn{font-size:15px;color:#3f3d47;letter-spacing:.2px}
+  .row-x{margin-left:auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#a4a2ad;border-radius:7px;flex-shrink:0}
+  .row-x:hover{background:#fdecec;color:var(--danger)}.row-x svg{width:15px;height:15px}
+  .skift{border:1px solid #c7c5cf;border-radius:9999px;padding:5px 14px;font-size:12px;color:#55525f;letter-spacing:.3px;flex-shrink:0;font-weight:500;margin-left:auto}
+  .skift:hover{background:#f3f3f6;border-color:var(--brand);color:var(--brand)}
+  .vchip{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;letter-spacing:.2px;padding:8px 13px;border-radius:9px;transition:.15s;line-height:1.2}
+  .vchip.empty{border:1.5px dashed #b0aebb;color:#55525f;background:#fbfbfd}
+  .vchip.empty:hover{border-color:var(--brand);color:var(--brand);background:#f7f7fb}
+  .vchip.filled{border:1px solid #c5d8d3;background:var(--teal-tint);color:#1c2b27}
+  .vchip.filled:hover{border-color:var(--brand)}
+  .vchip.filled.danger-val{background:var(--danger-border);border-color:#d94a43;color:#fff}
+  .vchip.missing{border:1.5px dashed var(--danger-border);background:var(--danger-tint);color:var(--danger);font-weight:600}
+  .vchip.missing:hover{background:#ffe1df}
+  .vchip svg{width:12px;height:12px;opacity:.5}
+
+  /* segment dividers between E/C/A groups */
+  .eca-group+.eca-group{margin-top:14px;padding-top:14px;border-top:1px dashed #ececf1}
+
+  /* add-step control (replaces loose pills) */
+  .add-step{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+  .add-step-btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px 0 12px;border-radius:9999px;border:1.5px dashed #c2c0cc;background:#fff;color:var(--brand);font-size:13px;font-weight:600;letter-spacing:.3px;transition:.15s}
+  .add-step-btn:hover{border-color:var(--brand);background:#f7f7fb}
+  .add-step-btn .as-ico{width:22px;height:22px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center}
+  .add-step-btn .as-ico svg{width:13px;height:13px}
+  .as-ico.ai-cond{background:var(--cond)}.as-ico.ai-act{background:var(--act)}
+
+  .inline-err{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--danger);font-weight:600;margin-top:16px;padding:10px 12px;background:var(--danger-tint);border-radius:9px}
+  .inline-err svg{width:16px;height:16px;flex-shrink:0}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(16,16,48,.42);backdrop-filter:blur(2px);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+  .overlay.show{display:flex;animation:fade .15s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{background:#fff;border-radius:18px;box-shadow:0 12px 40px rgba(16,16,48,.25);width:min(440px,100%);max-height:86vh;display:flex;flex-direction:column;animation:pop .18s cubic-bezier(.2,.8,.3,1)}
+  @keyframes pop{from{transform:translateY(12px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+  .modal-head{padding:22px 24px 14px;border-bottom:1px solid var(--border)}
+  .modal-head .step{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:7px;margin-bottom:10px}
+  .modal-head .step svg{width:13px;height:13px}
+  .step.s-event{background:var(--evt-tint);color:var(--evt)}.step.s-cond{background:var(--cond-tint);color:var(--cond)}.step.s-act{background:var(--act-tint);color:var(--act)}.step.s-name{background:var(--teal-tint);color:var(--brand)}
+  .modal-head h3{font-size:20px;font-weight:700}
+  .modal-head p{font-size:13px;color:var(--text-tertiary);margin-top:5px;line-height:1.45}
+  .modal-search{margin:14px 24px 0;position:relative}
+  .modal-search input{width:100%;padding:11px 12px 11px 38px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;outline:none}
+  .modal-search input:focus{border-color:var(--brand)}
+  .modal-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-tertiary)}
+  .modal-body{padding:16px 24px;overflow-y:auto;flex:1}
+  .opt{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--brand);background:#f7f7fb}
+  .opt.sel{border-color:var(--brand);background:var(--teal-tint)}
+  .opt .ico-box{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .opt .ico-box svg{width:18px;height:18px}
+  .ib-event{background:var(--evt-tint);color:var(--evt)}.ib-cond{background:var(--cond-tint);color:var(--cond)}.ib-act{background:var(--act-tint);color:var(--act)}
+  .opt .id{font-size:11px;font-weight:700;color:var(--text-tertiary);background:#f0f0f4;padding:3px 7px;border-radius:5px;flex-shrink:0;min-width:38px;text-align:center}
+  .opt .lbl{flex:1;font-size:14px;font-weight:600}
+  .opt .lbl small{display:block;color:var(--text-tertiary);font-size:12px;font-weight:400;margin-top:2px}
+  .opt .check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .opt.sel .check{background:var(--brand);border-color:var(--brand)}
+  .opt .check svg{width:11px;height:11px;color:#fff;display:none}.opt.sel .check svg{display:block}
+  .opt .chev{width:16px;height:16px;color:#c3c1cb;flex-shrink:0}
+  .field-label{font-size:12.5px;font-weight:700;margin-bottom:8px;display:block}
+  .modal-input{width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;outline:none}
+  .modal-input:focus{border-color:var(--brand)}.modal-input.err{border-color:var(--danger-border);background:var(--danger-tint)}
+  .helper{font-size:12px;color:var(--text-tertiary);margin-top:7px}.helper.err{color:var(--danger);font-weight:600}
+  .op-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .op-cell{border:1px solid var(--border);border-radius:10px;padding:14px 6px;text-align:center;cursor:pointer;transition:.12s}
+  .op-cell:hover{border-color:var(--brand);background:#f7f7fb}.op-cell.sel{border-color:var(--brand);background:var(--teal-tint)}
+  .op-cell .sym{font-size:20px;font-weight:700;line-height:1}.op-cell .nm{font-size:11px;color:var(--text-tertiary);margin-top:5px}
+  .modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center}
+  .modal-foot .mbtn{height:42px;border-radius:9999px;padding:0 20px;font-size:14px;font-weight:600;letter-spacing:.4px;transition:.15s}
+  .mbtn-ghost{color:var(--brand)}.mbtn-ghost:hover{background:var(--sky-50)}
+  .mbtn-primary{background:var(--brand);color:#fff}.mbtn-primary:hover{background:#1f1f4a}
+  .modal-foot .right{display:flex;gap:10px;margin-left:auto}
+
+  /* SNACKBAR */
+  .snackwrap{position:fixed;left:0;right:0;bottom:28px;display:flex;justify-content:center;z-index:60;pointer-events:none;padding:0 16px}
+  .snack{pointer-events:auto;min-width:360px;max-width:520px;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;background:#fff;box-shadow:0 12px 40px rgba(16,16,48,.22),0 0 0 1px rgba(16,16,48,.05);color:var(--text);transform:translateY(180%);opacity:0;transition:.32s cubic-bezier(.2,.9,.3,1)}
+  .snack.show{transform:none;opacity:1}
+  .snack .s-ico{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .snack.error .s-ico{background:var(--danger-tint);color:var(--danger)}
+  .snack.success .s-ico{background:var(--success-tint);color:var(--success)}
+  .snack .s-ico svg{width:20px;height:20px}
+  .snack .s-txt{flex:1}
+  .snack .s-txt b{display:block;font-size:14px;font-weight:700;margin-bottom:2px;color:var(--text)}
+  .snack .s-txt span{font-size:12.5px;color:var(--text-tertiary);line-height:1.45}
+  .snack .s-act{font-size:13px;font-weight:600;padding:9px 14px;border-radius:9px;border:1px solid var(--border-strong);color:var(--brand);white-space:nowrap;flex-shrink:0;transition:.15s}
+  .snack .s-act:hover{background:var(--sky-50);border-color:var(--brand)}
+  .snack .s-close{color:var(--text-tertiary);opacity:.7;width:26px;height:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:7px}
+  .snack .s-close:hover{opacity:1;background:#f3f3f6}.snack .s-close svg{width:16px;height:16px}
+
+  /* error-details modal list */
+  .err-rule{margin-bottom:16px}
+  .err-rule:last-child{margin-bottom:0}
+  .err-rule .er-head{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;margin-bottom:8px}
+  .err-rule .er-head .er-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);flex-shrink:0}
+  .err-rule .er-head .er-jump{margin-left:auto;font-size:12px;font-weight:600;color:var(--brand);padding:4px 10px;border-radius:7px}
+  .err-rule .er-head .er-jump:hover{background:var(--sky-50)}
+  .err-list{display:flex;flex-direction:column;gap:6px}
+  .err-item{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-secondary);padding:9px 12px;background:#fbfbfd;border:1px solid #efeef3;border-radius:9px}
+  .err-item svg{width:14px;height:14px;color:var(--danger);flex-shrink:0}
+  .err-item .ei-kw{font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:5px;flex-shrink:0}
+  .ei-event{background:var(--evt-tint);color:var(--evt)}.ei-cond{background:var(--cond-tint);color:var(--cond)}.ei-act{background:var(--act-tint);color:var(--act)}.ei-gen{background:#eceaf2;color:#55525f}
+  .toast-hint{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(160%);background:var(--brand);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:55;opacity:0;transition:.25s}
+  .toast-hint.show{transform:translateX(-50%);opacity:1}
+</style>
+</head>
+<body>
+
+<!-- BROWSER CHROME -->
+<div class="browser-bar">
+  <div class="browser-controls"><span class="c bc-red"></span><span class="c bc-yellow"></span><span class="c bc-green"></span></div>
+  <div class="tab"><span class="fav">A</span><span>AppNavn</span><span class="x">×</span></div>
+  <span class="plus">+</span>
+</div>
+<div class="url-bar">
+  <div class="url-nav"><span>‹</span><span>›</span><span>⟳</span><span>⌂</span></div>
+  <div class="url-fill"><span class="lock">🔒</span><span>www.AppNavn.dk/redaktør</span></div>
+  <div class="url-right"><span>★</span><span>⋮</span></div>
+</div>
+
+<!-- TOP-NAV-SUB -->
+<div class="topnav">
+  <button class="icon-circle" title="Tilbage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+  <div class="titles">
+    <div class="crumbrow"><span class="crumb">Modulpakke</span><span class="dot"></span><span id="pkgBadge" class="badge-draft">Kladde</span></div>
+    <div class="titlerow"><h1 class="ff-domine">Behandling af angst</h1>
+      <button class="edit-pencil" title="Omdøb pakke"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+    </div>
+  </div>
+  <span class="saved-label" id="savedLabel">Gemt i dag 09:34</span>
+  <div class="btns">
+    <button class="btn btn-secondary" onclick="onSave()">Gem</button>
+    <button class="btn btn-primary-disabled" title="Udfyld og gem reglerne først">Publicér</button>
+    <button class="btn-icon" title="Mere"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+  </div>
+</div>
+
+<!-- TAB-NAV -->
+<div class="tabnav">
+  <div class="tabitem">Indhold</div><div class="tabitem">Opsætning</div>
+  <div class="tabitem">Valgfrie moduler</div><div class="tabitem">Tillægsmoduler</div>
+  <div class="tabitem active">Regler</div>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+  <div class="page-head">
+    <h2>Regler</h2>
+    <p>Byg automatiske regler efter modellen <b>Når → Hvis → Så</b>: en hændelse udløser reglen, en betingelse skal være opfyldt, og en handling udføres. En regel kan først aktiveres, når alle felter er udfyldt.</p>
+  </div>
+  <div id="content"></div>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="snackwrap"><div class="snack" id="snack"></div></div>
+<div class="toast-hint" id="hint"></div>
+
+<script>
+/* ================= TYPES =================
+   Three triggers, each allowing only specific conditions (OG).
+   Output is always: dan opgave med titel + prioritet. */
+const TRIGGER_TYPES=[
+  {id:'inactive',label:'Inaktivitet',sub:'Borgeren har været inaktiv',
+    tpl:[{conn:'borgeren er'},{txt:'inaktiv'}],
+    allowedConds:['inactive_days']},
+  {id:'module_available',label:'Modul gjort tilgængeligt',sub:'Et modul er blevet åbnet for borgeren',
+    tpl:[{conn:'modul'},{slot:'module'},{conn:'er gjort tilgængeligt'}],
+    allowedConds:['incomplete_days']},
+  {id:'module_submitted',label:'Modul indsendt',sub:'Borgeren har indsendt et modul',
+    tpl:[{conn:'modul'},{slot:'module'},{conn:'er indsendt'}],
+    allowedConds:['score_compare','answer_is']},
+];
+const CONDITION_TYPES=[
+  {id:'inactive_days',label:'Dage siden seneste aktivitet',sub:'Tid siden borgeren sidst var aktiv',
+    tpl:[{conn:'der er gået mere end'},{slot:'days'},{conn:'dage siden seneste aktivitet'}]},
+  {id:'incomplete_days',label:'Dage uden gennemførelse',sub:'Modulet er ikke gennemført inden for X dage',
+    tpl:[{conn:'der er gået mere end'},{slot:'days'},{conn:'dage uden at modulet er gennemført'}]},
+  {id:'score_compare',label:'Beregning',sub:'Sammenlign en beregnet værdi',
+    tpl:[{conn:'beregning'},{slot:'calc'},{slot:'op'},{slot:'value'}]},
+  {id:'answer_is',label:'Svar på spørgsmål',sub:'Et bestemt svar er valgt',
+    tpl:[{conn:'svar på'},{slot:'question'},{conn:'er'},{slot:'answer'}]},
+];
+/* single fixed action */
+const ACTION_TYPE={id:'create_task',tpl:[{conn:'dan opgave med titel'},{slot:'title'},{conn:'og prioritet'},{slot:'prio'}]};
+
+const MODULES=[{id:'M1',name:'Intro til forløbet',sub:'Velkomstmodul'},{id:'M2',name:'Registrering af humør',sub:'Dagligt spørgeskema'},{id:'M3',name:'Symptomscore (PHQ-9)',sub:'Validering hver uge'},{id:'M4',name:'Forstå din angst',sub:'Psykoedukation'}];
+const CALCS=[{id:'C1',name:'symptomscore 1',sub:'Sum af spørgsmål 1–9'},{id:'C2',name:'angstscore',sub:'GAD-7 total'},{id:'C3',name:'humørtrend',sub:'7-dages gennemsnit'}];
+const QUESTIONS=[{id:'Q1',name:'Spørgsmål 1',sub:'Hvordan har du det i dag?'},{id:'Q2',name:'Spørgsmål 2',sub:'Har du haft selvmordstanker?'},{id:'Q3',name:'Spørgsmål 3',sub:'Sover du godt?'}];
+const PRIORITIES=[{id:'low',name:'Lav',color:'#cdeede'},{id:'med',name:'Mellem',color:'#fdf0c4'},{id:'high',name:'Høj',color:'#ff6058'}];
+const OPERATORS=[{id:'eq',sym:'=',nm:'lig med'},{id:'neq',sym:'≠',nm:'forskellig fra'},{id:'gt',sym:'>',nm:'større end'},{id:'lt',sym:'<',nm:'mindre end'},{id:'gte',sym:'≥',nm:'større/lig'},{id:'lte',sym:'≤',nm:'mindre/lig'}];
+const ANSWERS=[{id:'A1',name:'Svarmulighed 1'},{id:'A2',name:'Svarmulighed 2'},{id:'A3',name:'Svarmulighed 3'}];
+
+let rules=[];let idc=0;const uid=()=>'r'+(++idc);let showErrors=false;
+
+/* ============ lookups ============ */
+const find=(coll,id)=>coll.find(x=>x.id===id);
+const findOp=id=>OPERATORS.find(o=>o.id===id);
+const findP=id=>PRIORITIES.find(p=>p.id===id);
+const triggerType=id=>TRIGGER_TYPES.find(t=>t.id===id);
+const condType=id=>CONDITION_TYPES.find(t=>t.id===id);
+
+function slotInfo(slot,vals){
+  const v=vals[slot];
+  switch(slot){
+    case 'module':{const m=find(MODULES,v);return m?{text:m.id+' – '+m.name}:{empty:1,text:'Modul'};}
+    case 'days':return (v!=null&&v!=='')?{text:v+' dage'}:{empty:1,text:'Antal dage'};
+    case 'calc':{const c=find(CALCS,v);return c?{text:c.name}:{empty:1,text:'Beregning'};}
+    case 'op':{const o=findOp(v);return o?{text:o.sym}:{empty:1,text:'Operator'};}
+    case 'value':return (v!=null&&v!=='')?{text:v+''}:{empty:1,text:'Værdi'};
+    case 'question':{const q=find(QUESTIONS,v);return q?{text:q.name}:{empty:1,text:'Spørgsmål'};}
+    case 'answer':{const a=find(ANSWERS,v);return a?{text:a.name}:{empty:1,text:'Svarmulighed'};}
+    case 'title':return (v&&v.trim())?{text:'"'+v+'"'}:{empty:1,text:'Titel'};
+    case 'prio':{const p=findP(v);return p?{text:p.name,danger:p.id==='high'}:{empty:1,text:'Prioritet'};}
+  }
+  return {empty:1,text:'…'};
+}
+const slotModal={module:'pickModule',days:'inputDays',calc:'pickCalc',op:'pickOp',value:'inputValue',question:'pickQuestion',answer:'pickAnswer',title:'inputTitle',prio:'pickPrio'};
+const slotLabel={module:'modul',days:'antal dage',calc:'beregning',op:'operator',value:'værdi',question:'spørgsmål',answer:'svarmulighed',title:'titel',prio:'prioritet'};
+
+/* ============ validation ============ */
+function slotsOfTrigger(typeId){const t=triggerType(typeId);return t?t.tpl.filter(x=>x.slot).map(x=>x.slot):[];}
+function slotsOfCond(typeId){const t=condType(typeId);return t?t.tpl.filter(x=>x.slot).map(x=>x.slot):[];}
+function slotsOfAction(){return ACTION_TYPE.tpl.filter(x=>x.slot).map(x=>x.slot);}
+function ruleErrors(r){
+  const e=[];
+  if(!r.name||!r.name.trim())e.push({slot:'name',label:'Regelnavn mangler',kind:'gen'});
+  if(!r.event)e.push({slot:'event',label:'Trigger mangler',kind:'event'});
+  else slotsOfTrigger(r.event.type).forEach(s=>{if(slotInfo(s,r.event.vals).empty)e.push({slot:'e_'+s,label:cap(slotLabel[s])+' mangler',kind:'event'});});
+  r.conditions.forEach((c,i)=>slotsOfCond(c.type).forEach(s=>{if(slotInfo(s,c.vals).empty)e.push({slot:'c'+i+s,label:cap(slotLabel[s])+' mangler i betingelse '+(i+1),kind:'cond'});}));
+  /* exactly one fixed action */
+  slotsOfAction().forEach(s=>{if(slotInfo(s,r.action.vals).empty)e.push({slot:'a_'+s,label:cap(slotLabel[s])+' mangler i opgave',kind:'act'});});
+  return e;
+}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+const isValid=r=>ruleErrors(r).length===0;
+
+/* ============ icons ============ */
+const I={
+  /* unique ECA icons */
+  event:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',      /* lightning = trigger */
+  cond:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>', /* funnel = condition */
+  act:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/><line x1="3" y1="12" x2="15" y2="12"/></svg>', /* arrow = action */
+  pencil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>',
+};
+const TYPE_KIND={inactive:'event',module_available:'event',module_submitted:'event',inactive_days:'cond',incomplete_days:'cond',score_compare:'cond',answer_is:'cond',create_task:'act'};
+const KIND_ICON={event:I.event,cond:I.cond,act:I.act};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ============ render ============ */
+function render(){
+  const c=document.getElementById('content');
+  if(rules.length===0){c.innerHTML=`<button class="add-card" onclick="addRule()">${I.plus} Tilføj regelkort</button>`;return;}
+  c.innerHTML=`<div class="cards">${rules.map((r,i)=>renderCard(r,i)).join('')}</div>
+    <button class="add-card small" onclick="addRule()">${I.plus} Tilføj regelkort</button>`;
+}
+
+function renderRow(kindIco,kwClass,kwLabel,segments,vals,argPrefix){
+  let parts=`<span class="kw-chip ${kwClass}"><span class="kw-ico">${kindIco}</span>${kwLabel}</span>`;
+  segments.forEach(seg=>{
+    if(seg.conn)parts+=`<span class="conn">${seg.conn}</span>`;
+    else if(seg.txt)parts+=`<span class="vchip filled" style="cursor:default">${seg.txt}</span>`;
+    else if(seg.slot){
+      const info=slotInfo(seg.slot,vals);
+      const cls=info.empty?'vchip empty':(info.danger?'vchip filled danger-val':'vchip filled');
+      parts+=`<button class="${cls}" onclick="${slotModal[seg.slot]}(${argPrefix},'${seg.slot}')">${esc(info.text)}</button>`;
+    }
+  });
+  return parts;
+}
+
+function renderCard(r,ri){
+  const hasContent=r.event;
+  let body;
+  if(!hasContent){
+    body=`<div class="card-empty">
+        <div class="e-ico">${I.event}</div>
+        <p>Kortet er tomt. Start med at vælge, hvornår reglen skal udløses.</p>
+        <button class="btn-trigger" onclick="pickTriggerType('${r.id}')">${I.plus} Vælg trigger</button>
+      </div>`;
+  }else{
+    const tt=triggerType(r.event.type);
+    let groups='';
+    /* EVENT group */
+    groups+=`<div class="eca-group"><div class="eca-row">
+        ${renderRow(I.event,'kw-event','NÅR',tt.tpl,r.event.vals,`'${r.id}'`)}
+        <button class="skift" onclick="confirmChangeTrigger('${r.id}')">Skift trigger</button>
+      </div></div>`;
+    /* CONDITION group */
+    if(r.conditions.length){
+      let rows='';
+      r.conditions.forEach((c,ci)=>{
+        rows+=`<div class="eca-row">
+          ${renderRow(I.cond,'kw-cond','OG',condType(c.type).tpl,c.vals,`'${r.id}',${ci}`)}
+          <button class="row-x" title="Fjern betingelse" onclick="delCond('${r.id}',${ci})">${I.x}</button>
+        </div>`;
+      });
+      groups+=`<div class="eca-group">${rows}</div>`;
+    }
+    /* ACTION group — always exactly one, fixed */
+    groups+=`<div class="eca-group"><div class="eca-row">
+        ${renderRow(I.act,'kw-act','SÅ',ACTION_TYPE.tpl,r.action.vals,`'${r.id}'`)}
+      </div></div>`;
+    /* add-OG button only if the trigger allows additional conditions */
+    const allowed=(tt.allowedConds||[]);
+    const canAddMore=allowed.length>1 || (allowed.length===1 && allowAddCondition(r));
+    const ogBtn=canAddMore
+      ? `<div class="add-step"><button class="add-step-btn" onclick="pickCondType('${r.id}')"><span class="as-ico ai-cond">${I.cond}</span>Tilføj OG (betingelse)</button></div>`
+      : '';
+    body=`<div class="eca">${groups}</div>${ogBtn}`;
+  }
+  const nameHtml=r.name&&r.name.trim()
+    ?`<span class="rulename" id="name-${r.id}">${esc(r.name)}</span>`
+    :`<span class="rulename unset" id="name-${r.id}">Navngiv regel</span>`;
+  return `<div class="card" id="card-${r.id}">
+    <div class="card-head">
+      <div class="tw"><div class="reglbl">Regel ${ri+1}</div>
+        <div class="namerow">${nameHtml}
+          <button class="name-pencil" title="Omdøb regel" onclick="openNameModal('${r.id}')">${I.pencil}</button></div></div>
+      <button class="trash" title="Slet regel" onclick="delRule('${r.id}')">${I.trash}</button>
+    </div>
+    ${body}
+  </div>`;
+}
+/* time-based triggers allow exactly one condition; module_submitted allows multiple */
+function allowAddCondition(r){
+  const tt=triggerType(r.event.type);
+  const allowed=tt.allowedConds||[];
+  if(allowed.length>1)return true;               // module_submitted: score + answer, can stack
+  return r.conditions.length===0;                // single-condition triggers: only until one exists
+}
+
+/* ============ card actions ============ */
+const getRule=id=>rules.find(r=>r.id===id);
+const newAction=()=>({type:'create_task',vals:{}});
+function markUnsaved(){const b=document.getElementById('pkgBadge');b.className='badge-draft';b.textContent='Kladde';document.getElementById('savedLabel').textContent='Ikke gemt';}
+function addRule(){rules.push({id:uid(),name:'',event:null,conditions:[],action:newAction()});markUnsaved();render();const el=document.querySelector('#content .card:last-child');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});flash(el);}}
+function delRule(id){const r=getRule(id);if((r.event||r.conditions.length||r.name)&&!confirm('Slet denne regel?'))return;rules=rules.filter(x=>x.id!==id);markUnsaved();render();refreshErrorSnack();}
+function delCond(id,ci){getRule(id).conditions.splice(ci,1);markUnsaved();render();refreshErrorSnack();}
+function flash(el){el.style.transition='box-shadow .4s';el.style.boxShadow='0 0 0 3px rgba(16,16,48,.22)';setTimeout(()=>el.style.boxShadow='',700);}
+
+/* change trigger -> clear OG (conditions), keep the fixed action, go straight to trigger picker */
+function confirmChangeTrigger(rid){
+  const r=getRule(rid);
+  r.conditions=[];
+  pickTriggerType(rid);
+}
+
+/* ============ modal infra ============ */
+const overlay=document.getElementById('overlay'),modalEl=document.getElementById('modal');let ms=null;
+function closeModal(){overlay.classList.remove('show');ms=null;}
+overlay.addEventListener('click',e=>{if(e.target===overlay)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('show'))closeModal();});
+function openModal(h){modalEl.innerHTML=h;overlay.classList.add('show');}
+function foot(label,fn,back){return `<div class="modal-foot">${back?`<button class="mbtn mbtn-ghost" onclick="${back}">‹ Tilbage</button>`:''}<div class="right"><button class="mbtn mbtn-ghost" onclick="closeModal()">Annullér</button><button class="mbtn mbtn-primary" onclick="${fn}">${label}</button></div></div>`;}
+
+/* ----- NAME modal ----- */
+function openNameModal(rid){
+  const r=getRule(rid);ms={rid};
+  openModal(`<div class="modal-head"><span class="step s-name">${I.edit} Navngiv</span><h3>Navngiv regel</h3><p>Giv reglen et sigende navn, så den er let at genkende på listen.</p></div>
+    <div class="modal-body"><label class="field-label">Regelnavn</label>
+      <input class="modal-input" id="nameInput" maxlength="60" value="${esc(r.name)}" placeholder="fx Beregning af score" oninput="this.classList.remove('err')">
+      <div class="helper" id="nameHelp">Bruges som overskrift på regelkortet.</div></div>
+    ${foot('Gem','applyName()')}`);
+  setTimeout(()=>{const i=document.getElementById('nameInput');i.focus();i.select();},50);
+  document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')applyName();});
+}
+function applyName(){const inp=document.getElementById('nameInput'),v=inp.value.trim();if(v===''){inp.classList.add('err');const h=document.getElementById('nameHelp');h.className='helper err';h.textContent='Navnet må ikke være tomt.';return;}getRule(ms.rid).name=v;markUnsaved();closeModal();render();refreshErrorSnack();toast('Navn gemt');}
+
+/* ----- TYPE chooser ----- */
+function typeChooser(kindClass,stepIco,step,title,desc,types,onPick){
+  const opts=types.map(t=>{const k=TYPE_KIND[t.id];return `<div class="opt" onclick="${onPick}('${t.id}')">
+      <span class="ico-box ib-${k}">${KIND_ICON[k]}</span>
+      <span class="lbl">${t.label}<small>${t.sub}</small></span>
+      <span class="chev">${I.chev}</span></div>`;}).join('');
+  openModal(`<div class="modal-head"><span class="step ${kindClass}">${stepIco} ${step}</span><h3>${title}</h3><p>${desc}</p></div>
+    <div class="modal-body">${opts}</div>
+    <div class="modal-foot"><div class="right"><button class="mbtn mbtn-ghost" onclick="closeModal()">Annullér</button></div></div>`);
+}
+function pickTriggerType(rid){ms={rid};typeChooser('s-event',I.event,'Når · trigger','Vælg trigger','Hvad skal udløse reglen?',TRIGGER_TYPES,'chooseTrigger');}
+function chooseTrigger(t){const r=getRule(ms.rid);r.event={type:t,vals:{}};r.conditions=[];markUnsaved();closeModal();render();refreshErrorSnack();toast('Trigger valgt — udfyld felterne');}
+
+/* condition types are filtered by the rule's trigger */
+function pickCondType(rid){
+  const r=getRule(rid);ms={rid};
+  const allowed=(triggerType(r.event.type).allowedConds||[]).map(id=>condType(id)).filter(Boolean);
+  typeChooser('s-cond',I.cond,'Hvis · betingelse','Vælg betingelse','Hvad skal være sandt, før reglen udløses?',allowed,'chooseCond');
+}
+function chooseCond(t){addCondition(ms.rid,t);closeModal();}
+function addCondition(rid,t){getRule(rid).conditions.push({type:t,vals:{}});markUnsaved();render();refreshErrorSnack();toast('Betingelse tilføjet — udfyld felterne');}
+
+/* ----- slot fillers -----
+   kind 'event' and 'act' use 2-arg openers (rid, slot) — no index.
+   kind 'cond' uses 3-arg openers (rid, idx, slot). */
+function target(rid,idx,kind){const r=getRule(rid);if(kind==='event')return r.event.vals;if(kind==='act')return r.action.vals;return r.conditions[idx].vals;}
+function listPicker(coll,o){
+  ms.sel=o.cur;ms._coll=coll;
+  const items=coll.map(x=>`<div class="opt ${o.cur===x.id?'sel':''}" data-id="${x.id}" onclick="ms.sel='${x.id}';selOpt('${x.id}')">
+      ${o.ids?`<span class="id">${x.id}</span>`:''}
+      <span class="lbl">${x.name}${x.sub?`<small>${x.sub}</small>`:''}</span>
+      <span class="check">${I.check}</span></div>`).join('');
+  openModal(`<div class="modal-head"><span class="step ${o.kindClass}">${o.stepIco} ${o.step}</span><h3>${o.title}</h3><p>${o.desc}</p></div>
+    ${coll.length>4?`<div class="modal-search">${I.search}<input placeholder="${o.ph}" oninput="filterOpts(this.value)">`+`</div>`:''}
+    <div class="modal-body" id="optBody">${items}</div>${foot('Anvend',o.apply,o.back)}`);
+}
+function selOpt(id){document.querySelectorAll('#optBody .opt').forEach(el=>el.classList.toggle('sel',el.dataset.id===id));}
+function filterOpts(q){q=q.toLowerCase();document.querySelectorAll('#optBody .opt').forEach(el=>el.style.display=el.textContent.toLowerCase().includes(q)?'':'none');}
+
+/* module is used by event triggers only (module_available / module_submitted) */
+function pickModule(rid,slot){ms={rid,idx:undefined,kind:'event',slot};listPicker(MODULES,{kindClass:'s-event',stepIco:I.event,step:'Når · trigger',title:'Vælg modul',desc:'Reglen knyttes til det valgte modul.',ids:true,ph:'Søg modul…',cur:target(rid,undefined,'event')[slot],apply:'applySel()'});}
+function pickCalc(rid,idx,slot){ms={rid,idx,kind:'cond',slot};listPicker(CALCS,{kindClass:'s-cond',stepIco:I.cond,step:'Hvis · betingelse',title:'Vælg beregning',desc:'Vælg hvilken beregnet værdi betingelsen skal måles på.',ids:true,ph:'Søg beregning…',cur:target(rid,idx,'cond')[slot],apply:'applySel()'});}
+function pickQuestion(rid,idx,slot){ms={rid,idx,kind:'cond',slot};listPicker(QUESTIONS,{kindClass:'s-cond',stepIco:I.cond,step:'Hvis · betingelse',title:'Vælg spørgsmål',desc:'Vælg hvilket spørgsmål svaret gælder.',ids:true,ph:'Søg spørgsmål…',cur:target(rid,idx,'cond')[slot],apply:'applySel()'});}
+function pickAnswer(rid,idx,slot){ms={rid,idx,kind:'cond',slot};listPicker(ANSWERS,{kindClass:'s-cond',stepIco:I.cond,step:'Hvis · betingelse',title:'Vælg svarmulighed',desc:'Vælg det svar betingelsen gælder for.',ids:false,ph:'Søg…',cur:target(rid,idx,'cond')[slot],apply:'applySel()'});}
+function applySel(){if(!ms.sel){hint('Vælg en mulighed');return;}target(ms.rid,ms.idx,ms.kind)[ms.slot]=ms.sel;markUnsaved();closeModal();render();refreshErrorSnack();toast('Valg gemt');}
+
+function pickOp(rid,idx,slot){ms={rid,idx,kind:'cond',slot,sel:target(rid,idx,'cond')[slot]};drawOp();}
+function drawOp(){const cells=OPERATORS.map(o=>`<div class="op-cell ${ms.sel===o.id?'sel':''}" onclick="ms.sel='${o.id}';drawOp()"><div class="sym">${o.sym}</div><div class="nm">${o.nm}</div></div>`).join('');openModal(`<div class="modal-head"><span class="step s-cond">${I.cond} Hvis · betingelse</span><h3>Vælg operator</h3><p>Hvordan skal værdien sammenlignes?</p></div><div class="modal-body"><div class="op-grid">${cells}</div></div>${foot('Anvend','applyOp()')}`);}
+function applyOp(){if(!ms.sel){hint('Vælg en operator');return;}target(ms.rid,ms.idx,'cond')[ms.slot]=ms.sel;markUnsaved();closeModal();render();refreshErrorSnack();toast('Operator valgt');}
+
+/* days slot lives on a CONDITION (inactive_days / incomplete_days) */
+function inputDays(rid,idx,slot){ms={rid,idx,kind:'cond',slot};const cur=target(rid,idx,'cond')[slot]||'';openModal(`<div class="modal-head"><span class="step s-cond">${I.cond} Hvis · betingelse</span><h3>Indtast antal dage</h3><p>Reglen udløses, når der er gået mere end dette antal dage.</p></div><div class="modal-body"><label class="field-label">Antal dage</label><input class="modal-input" id="numInput" type="number" inputmode="numeric" value="${esc(cur)}" placeholder="fx 7" oninput="this.classList.remove('err')"><div class="helper" id="numHelp">Heltal fra 1 og op.</div></div>${foot('Anvend','applyNum()')}`);setTimeout(()=>document.getElementById('numInput').focus(),50);document.getElementById('numInput').addEventListener('keydown',e=>{if(e.key==='Enter')applyNum();});}
+function inputValue(rid,idx,slot){ms={rid,idx,kind:'cond',slot};const cur=target(rid,idx,'cond')[slot]||'';openModal(`<div class="modal-head"><span class="step s-cond">${I.cond} Hvis · betingelse</span><h3>Indtast værdi</h3><p>Angiv den værdi, beregningen skal sammenlignes med.</p></div><div class="modal-body"><label class="field-label">Værdi</label><input class="modal-input" id="numInput" type="number" inputmode="numeric" value="${esc(cur)}" placeholder="fx 25" oninput="this.classList.remove('err')"><div class="helper" id="numHelp">Numerisk værdi mellem 0 og 100.</div></div>${foot('Anvend','applyNum()')}`);setTimeout(()=>document.getElementById('numInput').focus(),50);document.getElementById('numInput').addEventListener('keydown',e=>{if(e.key==='Enter')applyNum();});}
+function applyNum(){const inp=document.getElementById('numInput'),v=inp.value.trim();if(v===''){inp.classList.add('err');const h=document.getElementById('numHelp');h.className='helper err';h.textContent='Feltet må ikke være tomt.';return;}target(ms.rid,ms.idx,ms.kind)[ms.slot]=v;markUnsaved();closeModal();render();refreshErrorSnack();toast('Værdi gemt');}
+
+/* title + prio live on the fixed ACTION (2-arg openers) */
+function inputTitle(rid,slot){ms={rid,idx:undefined,kind:'act',slot};const cur=target(rid,undefined,'act')[slot]||'';openModal(`<div class="modal-head"><span class="step s-act">${I.act} Så · opgave</span><h3>Skriv opgave titel</h3><p>Kort titel som behandleren ser på opgaven.</p></div><div class="modal-body"><label class="field-label">Titel</label><input class="modal-input" id="titleInput" maxlength="40" value="${esc(cur)}" placeholder="fx Følg op akut" oninput="document.getElementById('cc').textContent=this.value.length+'/40';this.classList.remove('err')"><div class="helper"><span id="cc">${cur.length}/40</span> tegn.</div></div>${foot('Anvend','applyTitle()')}`);setTimeout(()=>document.getElementById('titleInput').focus(),50);document.getElementById('titleInput').addEventListener('keydown',e=>{if(e.key==='Enter')applyTitle();});}
+function applyTitle(){const inp=document.getElementById('titleInput'),v=inp.value.trim();if(v===''){inp.classList.add('err');return;}target(ms.rid,undefined,'act')[ms.slot]=v;markUnsaved();closeModal();render();refreshErrorSnack();toast('Titel gemt');}
+
+function pickPrio(rid,slot){ms={rid,idx:undefined,kind:'act',slot,sel:target(rid,undefined,'act')[slot]};drawPrio();}
+function drawPrio(){const opts=PRIORITIES.map(p=>`<div class="opt ${ms.sel===p.id?'sel':''}" onclick="ms.sel='${p.id}';drawPrio()"><span style="width:16px;height:16px;border-radius:5px;background:${p.color};flex-shrink:0"></span><span class="lbl">${p.name}</span><span class="check">${I.check}</span></div>`).join('');openModal(`<div class="modal-head"><span class="step s-act">${I.act} Så · opgave</span><h3>Vælg prioritet</h3><p>Fast rækkefølge: Lav, Mellem, Høj. Bestemmer placering i behandlerens kø.</p></div><div class="modal-body">${opts}</div>${foot('Anvend','applyPrio()')}`);}
+function applyPrio(){if(!ms.sel){hint('Vælg en prioritet');return;}target(ms.rid,undefined,'act')[ms.slot]=ms.sel;markUnsaved();closeModal();render();refreshErrorSnack();toast('Prioritet valgt');}
+
+/* ============ save + snackbar ============ */
+const snack=document.getElementById('snack');let snackTimer=null;let errorSnackActive=false;
+/* called after any edit: if the error snackbar is up, refresh it live (or dismiss when clean) */
+function refreshErrorSnack(){
+  if(!errorSnackActive)return;
+  const bad=rules.filter(r=>!isValid(r));
+  if(bad.length===0){
+    errorSnackActive=false;showErrors=false;
+    render();
+    const b=document.getElementById('pkgBadge');b.className='badge-active';b.textContent='Klar';
+    showSuccessSnack(true);
+  }else{
+    showErrorSnack();
+  }
+}
+function totalErrorCount(){return rules.reduce((n,r)=>n+ruleErrors(r).length,0);}
+function badRuleCount(){return rules.filter(r=>!isValid(r)).length;}
+
+function showErrorSnack(){
+  const rc=badRuleCount();const fc=totalErrorCount();
+  clearTimeout(snackTimer);snack.className='snack error';
+  snack.innerHTML=`<div class="s-ico">${I.warn}</div>
+    <div class="s-txt"><b>${rc} regel${rc>1?'ler':''} mangler felter</b>
+      <span>${fc} felt${fc>1?'er':''} skal udfyldes, før du kan gemme.</span></div>
+    <button class="s-act" onclick="openErrorDetails()">Se detaljer</button>
+    <button class="s-close" onclick="hideSnack()">${I.x}</button>`;
+  requestAnimationFrame(()=>snack.classList.add('show'));
+}
+function openErrorDetails(){
+  const KW={event:{cls:'ei-event',txt:'NÅR'},cond:{cls:'ei-cond',txt:'OG'},act:{cls:'ei-act',txt:'SÅ'},gen:{cls:'ei-gen',txt:'REGEL'}};
+  let blocks='';
+  rules.forEach((r,i)=>{
+    const errs=ruleErrors(r);if(!errs.length)return;
+    const name=r.name&&r.name.trim()?esc(r.name):('Regel '+(i+1));
+    const items=errs.map(e=>{const k=KW[e.kind]||KW.gen;return `<div class="err-item"><span class="ei-kw ${k.cls}">${k.txt}</span><span>${esc(e.label)}</span></div>`;}).join('');
+    blocks+=`<div class="err-rule">
+        <div class="er-head"><span class="er-dot"></span>${name}
+          <button class="er-jump" onclick="closeModal();jumpTo('${r.id}')">Gå til regel ›</button></div>
+        <div class="err-list">${items}</div></div>`;
+  });
+  openModal(`<div class="modal-head"><span class="step s-name" style="background:var(--danger-tint);color:var(--danger)">${I.warn} Mangler</span><h3>Felter der mangler</h3><p>Udfyld felterne herunder for at kunne gemme reglerne.</p></div>
+    <div class="modal-body">${blocks}</div>
+    <div class="modal-foot"><div class="right"><button class="mbtn mbtn-primary" onclick="closeModal()">Luk</button></div></div>`);
+}
+function showSuccessSnack(liveFixed){
+  clearTimeout(snackTimer);snack.className='snack success';
+  const title=liveFixed?'Alle felter er udfyldt':'Reglerne er gemt';
+  const msg=liveFixed?`Alle ${rules.length} regler er klar. Tryk Gem for at gemme.`:`${rules.length} regel${rules.length>1?'ler':''} blev gemt uden fejl.`;
+  snack.innerHTML=`<div class="s-ico">${I.check}</div><div class="s-txt"><b>${title}</b><span>${msg}</span></div><button class="s-close" onclick="hideSnack()">${I.x}</button>`;
+  requestAnimationFrame(()=>snack.classList.add('show'));snackTimer=setTimeout(hideSnack,4200);
+}
+function hideSnack(){snack.classList.remove('show');}
+function jumpTo(rid){const el=document.getElementById('card-'+rid);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});flash(el);}hideSnack();}
+
+function onSave(){
+  if(rules.length===0){clearTimeout(snackTimer);snack.className='snack error';snack.innerHTML=`<div class="s-ico">${I.warn}</div><div class="s-txt"><b>Ingen regler at gemme</b><span>Tilføj mindst ét regelkort først.</span></div><button class="s-close" onclick="hideSnack()">${I.x}</button>`;requestAnimationFrame(()=>snack.classList.add('show'));return;}
+  const bad=rules.filter(r=>!isValid(r));
+  if(bad.length){showErrors=true;errorSnackActive=true;render();showErrorSnack();}
+  else{showErrors=false;errorSnackActive=false;render();const b=document.getElementById('pkgBadge');b.className='badge-active';b.textContent='Gemt';const now=new Date();document.getElementById('savedLabel').textContent='Gemt i dag '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');showSuccessSnack();}
+}
+const hintEl=document.getElementById('hint');let hintTimer=null;
+function hint(m){clearTimeout(hintTimer);hintEl.textContent=m;hintEl.classList.add('show');hintTimer=setTimeout(()=>hintEl.classList.remove('show'),2200);}
+function toast(m){hint(m);}
+
+render();
+</script>
+</body>
+</html>
